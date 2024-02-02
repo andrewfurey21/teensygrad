@@ -12,8 +12,8 @@ int main(void) {
 
     for (int i = 0; i < buf_size; i++) {
         buffer[i] = (float)i;
-        buffer2[i] = (float)i-10;
-        buffer3[i] = (float)i+4;
+        buffer2[i] = (float)i+2;
+        buffer3[i] = (float)i-4;
     }
 
     struct tensor weight = from_buffer(&s, buffer);
@@ -23,6 +23,8 @@ int main(void) {
     struct tensor wi = mul_tensors(&weight, &input);
     struct tensor out = add_tensors(&wi, &bias);
 
+    struct tensor act = relu_tensor(&out);
+
     print_t(&input);
     print_t(&weight);
 
@@ -30,4 +32,5 @@ int main(void) {
     print_t(&bias);
 
     print_t(&out);
+    print_t(&act);
 }

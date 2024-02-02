@@ -78,3 +78,15 @@ struct tensor mul_tensors(struct tensor* a, struct tensor* b) {
 
     return t;
 }
+
+struct tensor relu_tensor(struct tensor* a) {
+    struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
+    struct tensor t = create_tensor(&shape_copy);
+
+    //could easily be vectorized.
+    for (uint64_t i = 0; i < a->size; i++) {
+        t.buffer[i] = a->buffer[i] * (a->buffer[i] > 0);
+    }
+
+    return t;
+}
