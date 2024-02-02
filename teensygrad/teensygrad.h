@@ -33,7 +33,7 @@ bool same_shape(struct tensor* a, struct tensor* b);
 
 //elementwise ops
 struct tensor add_tensors(struct tensor* a, struct tensor* b);
-struct tensor mul_tensor(struct tensor* a, struct tensor* b);
+struct tensor mul_tensors(struct tensor* a, struct tensor* b);
 struct tensor relu_tensor(struct tensor* t);
 
 #endif

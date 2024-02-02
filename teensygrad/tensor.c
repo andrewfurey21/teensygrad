@@ -42,10 +42,10 @@ void print_t(struct tensor* t) {
 }
 
 bool same_shape(struct tensor* a, struct tensor* b) {
-    if (a->size != b->size) {
+    if (a->shape_b->size != b->shape_b->size) {
         return false;
     }
-    for (uint32_t i = 0; i < a->size; i++) {
+    for (uint32_t i = 0; i < a->shape_b->size; i++) {
         if (a->shape_b->dims[i] != b->shape_b->dims[i]) {
             return false;
         }
@@ -61,6 +61,19 @@ struct tensor add_tensors(struct tensor* a, struct tensor* b) {
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {
         t.buffer[i] = a->buffer[i] + b->buffer[i];
+    }
+
+    return t;
+}
+
+struct tensor mul_tensors(struct tensor* a, struct tensor* b) {
+    assert(same_shape(a, b) && "Tensors are not the same shape.");
+    struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
+    struct tensor t = create_tensor(&shape_copy);
+
+    //could easily be vectorized.
+    for (uint64_t i = 0; i < a->size; i++) {
+        t.buffer[i] = a->buffer[i] * b->buffer[i];
     }
 
     return t;
