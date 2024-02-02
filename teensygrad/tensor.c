@@ -1,5 +1,9 @@
 #include "stdlib.h"
 #include "stdint.h"
+#include "stdbool.h"
+#include "stdio.h"
+#include "assert.h"
+
 #include "teensygrad.h"
 
 uint64_t buflen(struct shape* s) {
@@ -25,4 +29,39 @@ struct tensor from_buffer(struct shape* s, float* buffer) {
     ret.buffer = buffer;
     ret.size = size;
     return ret;
+}
+
+
+//TODO: clean up, print shape as well, better formatting
+void print_t(struct tensor* t) {
+    printf("Tensor buffer:[");
+    for (int i = 0; i < t->size; i++) {
+        printf("%f, ", t->buffer[i]);
+    }
+    printf("]\n");
+}
+
+bool same_shape(struct tensor* a, struct tensor* b) {
+    if (a->size != b->size) {
+        return false;
+    }
+    for (uint32_t i = 0; i < a->size; i++) {
+        if (a->shape_b->dims[i] != b->shape_b->dims[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+struct tensor add_tensors(struct tensor* a, struct tensor* b) {
+    assert(same_shape(a, b) && "Tensors are not the same shape.");
+    struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
+    struct tensor t = create_tensor(&shape_copy);
+
+    //could easily be vectorized.
+    for (uint64_t i = 0; i < a->size; i++) {
+        t.buffer[i] = a->buffer[i] + b->buffer[i];
+    }
+
+    return t;
 }

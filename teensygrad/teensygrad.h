@@ -26,7 +26,14 @@ struct tensor {
 struct tensor create_tensor(struct shape* s);
 //TODO:
 //print function, properly shaped like numpy
+void print_t(struct tensor* t);
 //struct tensor random_tensor(struct shape* s, size_t min, size_t max);
 struct tensor from_buffer(struct shape* s, float* buffer);
+bool same_shape(struct tensor* a, struct tensor* b);
+
+//elementwise ops
+struct tensor add_tensors(struct tensor* a, struct tensor* b);
+struct tensor mul_tensor(struct tensor* a, struct tensor* b);
+struct tensor relu_tensor(struct tensor* t);
 
 #endif
