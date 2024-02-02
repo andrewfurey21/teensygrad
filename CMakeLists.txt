@@ -5,6 +5,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Werror")
 
 set(LIBRARY
   teensygrad/shape.c
+  teensygrad/op.c
   teensygrad/tensor.c
   teensygrad/teensygrad.h
 )

@@ -16,9 +16,9 @@ int main(void) {
         buffer3[i] = (float)i-4;
     }
 
-    struct tensor weight = from_buffer(&s, buffer);
-    struct tensor bias = from_buffer(&s, buffer3);
-    struct tensor input = from_buffer(&s, buffer2);
+    struct tensor weight = from_buffer(&s, buffer, true);
+    struct tensor bias = from_buffer(&s, buffer3, true);
+    struct tensor input = from_buffer(&s, buffer2, false);
 
     struct tensor wi = mul_tensors(&weight, &input);
     struct tensor out = add_tensors(&wi, &bias);
