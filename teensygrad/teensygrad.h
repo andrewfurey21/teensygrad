@@ -34,9 +34,11 @@ struct tensor {
     bool calculate_grads;
     struct tensor** parents;
     enum Op op;
+
+    struct tensor* grads;
 };
 
-struct tensor create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
+struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
 //TODO:
 //print function, properly shaped like numpy
 void print_t(struct tensor* t);
@@ -45,8 +47,11 @@ struct tensor from_buffer(struct shape* s, float* buffer, bool requires_grads);
 bool same_shape(struct tensor* a, struct tensor* b);
 
 //elementwise ops
-struct tensor add_tensors(struct tensor* a, struct tensor* b);
-struct tensor mul_tensors(struct tensor* a, struct tensor* b);
-struct tensor relu_tensor(struct tensor* t);
+struct tensor* add_tensors(struct tensor* a, struct tensor* b);
+struct tensor* mul_tensors(struct tensor* a, struct tensor* b);
+struct tensor* relu_tensor(struct tensor* t);
+
+//backprop
+void backwards(struct tensor* start, struct tensor* start_grad);
 
 #endif

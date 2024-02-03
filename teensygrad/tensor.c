@@ -14,11 +14,25 @@ uint64_t buflen(struct shape* s) {
     return size;
 }
 
-struct tensor create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op) {
+struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op) {
     uint64_t size = buflen(s);
     float* buffer = (float*)calloc(size, size*(uint64_t)sizeof(float));
 
-    struct tensor t = {s, buffer, size, requires_grad, parents, op };
+
+    struct tensor* grads;
+    if (requires_grad) {
+        grads = create_tensor(s, false, NULL, NOOP);
+    }
+
+    //struct tensor t = {s, buffer, size, requires_grad, parents, op, grads };
+    struct tensor* t = (struct tensor*)malloc(sizeof(struct tensor*));
+    t->shape_b = s;
+    t->buffer = buffer;
+    t->size = size;
+    t->calculate_grads = requires_grad;
+    t->parents = parents;
+    t->op = op;
+    t->grads = grads;
     return t;
 }
 
@@ -58,7 +72,7 @@ bool same_shape(struct tensor* a, struct tensor* b) {
     return true;
 }
 
-struct tensor add_tensors(struct tensor* a, struct tensor* b) {
+struct tensor* add_tensors(struct tensor* a, struct tensor* b) {
     assert(same_shape(a, b) && "Tensors are not the same shape.");
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
@@ -67,17 +81,17 @@ struct tensor add_tensors(struct tensor* a, struct tensor* b) {
     parents[0] = a;
     parents[1] = b;
 
-    struct tensor t = create_tensor(&shape_copy, true, parents, ADD);
+    struct tensor* t = create_tensor(&shape_copy, true, parents, ADD);
 
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {
-        t.buffer[i] = a->buffer[i] + b->buffer[i];
+        t->buffer[i] = a->buffer[i] + b->buffer[i];
     }
 
     return t;
 }
 
-struct tensor mul_tensors(struct tensor* a, struct tensor* b) {
+struct tensor* mul_tensors(struct tensor* a, struct tensor* b) {
     assert(same_shape(a, b) && "Tensors are not the same shape.");
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
@@ -86,28 +100,29 @@ struct tensor mul_tensors(struct tensor* a, struct tensor* b) {
     parents[0] = a;
     parents[1] = b;
 
-    struct tensor t = create_tensor(&shape_copy, true, parents, MUL);
+    struct tensor* t = create_tensor(&shape_copy, true, parents, MUL);
 
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {
-        t.buffer[i] = a->buffer[i] * b->buffer[i];
+        t->buffer[i] = a->buffer[i] * b->buffer[i];
     }
 
     return t;
 }
 
-struct tensor relu_tensor(struct tensor* a) {
+struct tensor* relu_tensor(struct tensor* a) {
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
     struct tensor** parents = (struct tensor**)malloc(op_radix(RELU)*sizeof(struct tensor**));
     parents[0] = a;
 
-    struct tensor t = create_tensor(&shape_copy, true, parents, RELU);
+    struct tensor* t = create_tensor(&shape_copy, true, parents, RELU);
 
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {
-        t.buffer[i] = a->buffer[i] * (a->buffer[i] > 0);
+        t->buffer[i] = a->buffer[i] * (a->buffer[i] > 0);
     }
 
     return t;
 }
+
