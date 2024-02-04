@@ -25,7 +25,7 @@ struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor*
         grads = create_tensor(s, false, NULL, NOOP);
     }
 
-    struct tensor* t = (struct tensor*)malloc(sizeof(struct tensor*));
+    struct tensor* t = (struct tensor*)malloc(sizeof(struct tensor));
     //TODO: copy everything!
     t->shape_b = s;
     t->buffer = buffer;
@@ -44,7 +44,7 @@ struct tensor* ones_tensor(struct shape* s, bool requires_grad, struct tensor** 
 }
 
 struct tensor* from_buffer(struct shape* s, float* buffer, bool requires_grads) {
-    struct tensor* ret = (struct tensor*)malloc(sizeof(struct tensor*));
+    struct tensor* ret = (struct tensor*)malloc(sizeof(struct tensor));
     ret->shape_b = s;
     uint64_t size = buflen(s);
 
@@ -84,7 +84,7 @@ struct tensor* add_tensors(struct tensor* a, struct tensor* b) {
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
 
-    struct tensor** parents = (struct tensor**)malloc(op_radix(ADD)*sizeof(struct tensor**));
+    struct tensor** parents = (struct tensor**)malloc(op_radix(ADD)*sizeof(struct tensor*));
     parents[0] = a;
     parents[1] = b;
 
@@ -103,7 +103,7 @@ struct tensor* mul_tensors(struct tensor* a, struct tensor* b) {
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
     //eh
-    struct tensor** parents = (struct tensor**)malloc(op_radix(MUL)*sizeof(struct tensor**));
+    struct tensor** parents = (struct tensor**)malloc(op_radix(MUL)*sizeof(struct tensor*));
     parents[0] = a;
     parents[1] = b;
 
@@ -120,7 +120,7 @@ struct tensor* mul_tensors(struct tensor* a, struct tensor* b) {
 struct tensor* relu_tensor(struct tensor* a) {
     struct shape shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
-    struct tensor** parents = (struct tensor**)malloc(op_radix(RELU)*sizeof(struct tensor**));
+    struct tensor** parents = (struct tensor**)malloc(op_radix(RELU)*sizeof(struct tensor*));
     parents[0] = a;
 
     struct tensor* t = create_tensor(&shape_copy, true, parents, RELU);

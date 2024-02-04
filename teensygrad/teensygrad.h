@@ -41,10 +41,11 @@ struct tensor {
 struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
 struct tensor* ones_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
 //TODO:
-//print function, properly shaped like numpy
+//format function, properly shaped like numpy
+//scalar mul, scaled_uniform, random, dot product (maybe multiple ops make up dot product, like tinygrad?)
 //cleanup, mort structures, multiple types (void* buffer), some more functions for creating/manipulating tensors
+
 void print_t(struct tensor* t);
-//struct tensor random_tensor(struct shape* s, size_t min, size_t max);
 struct tensor* from_buffer(struct shape* s, float* buffer, bool requires_grads);
 bool same_shape(struct tensor* a, struct tensor* b);
 
@@ -56,7 +57,7 @@ struct tensor* relu_tensor(struct tensor* t);
 void zero(struct tensor* t);
 
 //backprop
-void backwards(struct tensor* current, struct tensor* start_grad);
+void backwards(struct tensor* current);
 
 //TODO: loss function
 
