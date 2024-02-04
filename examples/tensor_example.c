@@ -35,6 +35,7 @@ int main(void) {
     print_t(out);
     print_t(act);
 
-    struct tensor* ones = ones_tensor(&s, false, NULL, NOOP);
-    backwards(act, ones);
+    printf("-------------------------------\n");
+
+    backwards(act);
 }
