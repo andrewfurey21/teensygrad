@@ -16,21 +16,25 @@ int main(void) {
         buffer3[i] = (float)i-4;
     }
 
-    struct tensor weight = from_buffer(&s, buffer, true);
-    struct tensor bias = from_buffer(&s, buffer3, true);
-    struct tensor input = from_buffer(&s, buffer2, false);
+    struct tensor* weight = from_buffer(&s, buffer, true);
+    struct tensor* bias = from_buffer(&s, buffer3, true);
+    struct tensor* input = from_buffer(&s, buffer2, false);
 
-    struct tensor wi = mul_tensors(&weight, &input);
-    struct tensor out = add_tensors(&wi, &bias);
+    struct tensor* wi = mul_tensors(weight, input);
+    struct tensor* out = add_tensors(wi, bias);
 
-    struct tensor act = relu_tensor(&out);
+    struct tensor* act = relu_tensor(out);
 
-    print_t(&input);
-    print_t(&weight);
 
-    print_t(&wi);
-    print_t(&bias);
+    print_t(input);
+    print_t(weight);
 
-    print_t(&out);
-    print_t(&act);
+    print_t(wi);
+    print_t(bias);
+
+    print_t(out);
+    print_t(act);
+
+    struct tensor* ones = ones_tensor(&s, false, NULL, NOOP);
+    backwards(act, ones);
 }

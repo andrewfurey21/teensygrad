@@ -3,6 +3,7 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "assert.h"
+#include "string.h"
 
 #include "teensygrad.h"
 
@@ -24,8 +25,8 @@ struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor*
         grads = create_tensor(s, false, NULL, NOOP);
     }
 
-    //struct tensor t = {s, buffer, size, requires_grad, parents, op, grads };
     struct tensor* t = (struct tensor*)malloc(sizeof(struct tensor*));
+    //TODO: copy everything!
     t->shape_b = s;
     t->buffer = buffer;
     t->size = size;
@@ -36,17 +37,23 @@ struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor*
     return t;
 }
 
-struct tensor from_buffer(struct shape* s, float* buffer, bool requires_grads) {
-    struct tensor ret;
-    ret.shape_b = s;
+struct tensor* ones_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op) {
+    struct tensor* ones = create_tensor(s, requires_grad, parents, op);
+    memset(ones->buffer, 1.0f, ones->size);
+    return ones;
+}
+
+struct tensor* from_buffer(struct shape* s, float* buffer, bool requires_grads) {
+    struct tensor* ret = (struct tensor*)malloc(sizeof(struct tensor*));
+    ret->shape_b = s;
     uint64_t size = buflen(s);
 
-    ret.buffer = buffer;
-    ret.size = size;
+    ret->buffer = buffer;
+    ret->size = size;
 
-    ret.op = NOOP;
-    ret.parents = NULL;
-    ret.calculate_grads = requires_grads;
+    ret->op = NOOP;
+    ret->parents = NULL;
+    ret->calculate_grads = requires_grads;
     return ret;
 }
 
@@ -126,3 +133,6 @@ struct tensor* relu_tensor(struct tensor* a) {
     return t;
 }
 
+void zero(struct tensor* t) {
+    memset(t->buffer, 0, t->size);
+}
