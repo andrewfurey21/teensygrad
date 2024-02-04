@@ -7,6 +7,8 @@ set(LIBRARY
   teensygrad/shape.c
   teensygrad/op.c
   teensygrad/tensor.c
+  teensygrad/graph.c
+  teensygrad/nn/optimizers.c
   teensygrad/teensygrad.h
 )
 add_library(teensy ${LIBRARY})
