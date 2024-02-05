@@ -123,11 +123,17 @@ void mul_backwards(struct tensor* self) {
     struct tensor* grads_1 = mul_tensors(self->grads, self->parents[0], false);
     struct tensor* grads_0 = mul_tensors(self->grads, self->parents[1], false);
 
+    struct tensor* acc_grads_0 = add_tensors(grads_1, self->parents[0]->grads, false);
+    struct tensor* acc_grads_1 = add_tensors(grads_0, self->parents[1]->grads, false);
+
     destroy_tensor(self->parents[0]->grads);
     destroy_tensor(self->parents[1]->grads);
 
-    self->parents[0]->grads = grads_0;
-    self->parents[1]->grads = grads_1;
+    destroy_tensor(grads_1);
+    destroy_tensor(grads_0);
+
+    self->parents[0]->grads = acc_grads_0;
+    self->parents[1]->grads = acc_grads_1;
 }
 
 
