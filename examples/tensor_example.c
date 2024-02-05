@@ -3,9 +3,9 @@
 #include "../teensygrad/teensygrad.h"
 
 int main(void) {
-    struct shape* s = create_shape_1d(10);
+    int buf_size = 2;
+    struct shape* s = create_shape_1d(buf_size);
 
-    int buf_size = 10;
     float* buffer = (float*)malloc(buf_size*sizeof(float));
     float* buffer2 = (float*)malloc(buf_size*sizeof(float));
     float* buffer3 = (float*)malloc(buf_size*sizeof(float));
@@ -13,7 +13,7 @@ int main(void) {
     for (int i = 0; i < buf_size; i++) {
         buffer[i] = (float)i;
         buffer2[i] = (float)i+2;
-        buffer3[i] = (float)i-4;
+        buffer3[i] = (float)i+4;
     }
 
     struct tensor* weight = from_buffer(s, buffer, true);
@@ -23,7 +23,7 @@ int main(void) {
     struct tensor* wi = mul_tensors(weight, input, true);
     struct tensor* out = add_tensors(wi, bias, true);
 
-    //struct tensor* act = relu_tensor(out);
+    struct tensor* act = relu_tensor(out, true);
 
     printf("input:\n");
     print_t(input);
@@ -35,6 +35,8 @@ int main(void) {
     print_t(wi);
     printf("wi + bias:\n");
     print_t(out);
+    printf("relu(wi + bias):\n");
+    print_t(act);
 
     printf("-------------------------------\n");
     printf("Grads before:\n");
@@ -43,8 +45,9 @@ int main(void) {
     print_t(weight->grads);
     print_t(wi->grads);
     print_t(out->grads);
+    print_t(act->grads);
 
-    backwards(out);
+    backwards(act);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
@@ -58,4 +61,6 @@ int main(void) {
     print_t(wi->grads);
     printf("wi + bias:\n");
     print_t(out->grads);
+    printf("relu(wi + bias):\n");
+    print_t(act->grads);
 }

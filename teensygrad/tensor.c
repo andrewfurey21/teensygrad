@@ -123,8 +123,8 @@ void mul_backwards(struct tensor* self) {
     struct tensor* grads_1 = mul_tensors(self->grads, self->parents[0], false);
     struct tensor* grads_0 = mul_tensors(self->grads, self->parents[1], false);
 
-    struct tensor* acc_grads_0 = add_tensors(grads_1, self->parents[0]->grads, false);
-    struct tensor* acc_grads_1 = add_tensors(grads_0, self->parents[1]->grads, false);
+    struct tensor* acc_grads_0 = add_tensors(grads_0, self->parents[0]->grads, false);
+    struct tensor* acc_grads_1 = add_tensors(grads_1, self->parents[1]->grads, false);
 
     destroy_tensor(self->parents[0]->grads);
     destroy_tensor(self->parents[1]->grads);
@@ -157,14 +157,26 @@ struct tensor* mul_tensors(struct tensor* a, struct tensor* b, bool requires_gra
     return t;
 }
 
-//should really be a max op
-struct tensor* relu_tensor(struct tensor* a) {
+void relu_backwards(struct tensor* self) {
+    struct tensor* grads = create_tensor(self->shape_b, false, NULL, NOOP);
+    for (size_t i = 0; i < self->parents[0]->size; i++) {
+        if (grads->buffer[i] < self->parents[0]->buffer[i]) {
+            grads->buffer[i] = 1;
+        }
+    }
+    destroy_tensor(self->parents[0]->grads);
+    self->parents[0]->grads = grads;
+}
+
+//TODO:should really be a max op
+struct tensor* relu_tensor(struct tensor* a, bool requires_grad) {
     struct shape* shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
     struct tensor** parents = (struct tensor**)malloc(op_radix(RELU)*sizeof(struct tensor*));
     parents[0] = a;
 
-    struct tensor* t = create_tensor(shape_copy, true, parents, RELU);
+    struct tensor* t = create_tensor(shape_copy, requires_grad, parents, RELU);
+    t->pfn = &relu_backwards;
 
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {

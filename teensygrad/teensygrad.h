@@ -34,7 +34,7 @@ struct tensor {
 
     //maybe a context struct?
     struct tensor** parents;
-    void (*pfn)(struct tensor*);
+    void (*pfn)(struct tensor*);//rename
     enum Op op;
 
     bool calculate_grads;
@@ -62,7 +62,8 @@ void add_backwards(struct tensor* self);
 struct tensor* mul_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
 void mul_backwards(struct tensor* self);
 
-struct tensor* relu_tensor(struct tensor* t);
+struct tensor* relu_tensor(struct tensor* t, bool requires_grad);
+void relu_backwards(struct tensor* self);
 
 void zero(struct tensor* t);
 
