@@ -91,7 +91,6 @@ void print_t(struct tensor* t) {
 //TODO:zeroing out function
 //TODO:take requires grad into account!
 void add_backwards(struct tensor* self) {
-    print_shape(self->grads->shape_b);
     struct tensor* grads_0 = add_tensors(self->grads, self->parents[0]->grads, false);
     struct tensor* grads_1 = add_tensors(self->grads, self->parents[1]->grads, false);
 

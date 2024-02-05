@@ -1,5 +1,6 @@
 #include "stdbool.h"
 #include "assert.h"
+#include "stdio.h"
 #include "teensygrad.h"
 
 #define MAX_NODES 100
@@ -16,7 +17,7 @@ struct graph* create_graph() {
     return list;
 }
 
-//O(n) :(
+//O(n) :(, need hash_set like ggml
 bool already_visited(struct graph* list, struct tensor* t) {
     for (size_t i = 0; i < list->size; i++) {
         if (list->nodes[i] == t) {
@@ -40,20 +41,21 @@ void topo_sort(struct graph* list, struct tensor* current) {
 }
 
 //calculate gradient of current,
-//TODO: accumulate gradients and add zeroing out function instead
 void backwards(struct tensor* current) {
-    //calculate gradients for each item in list
-    //add those gradients to the current gradients.
     struct graph* list = create_graph();
     topo_sort(list, current);
-    for (size_t i = 0; i < list->size; i++) {
-        print_t(list->nodes[i]);
+
+    struct tensor* grads = ones_tensor(current->shape_b, false, NULL, NOOP);
+    destroy_tensor(current->grads);
+    current->grads = grads;
+    if (list->size <= 1) {
+        return;
     }
-//    struct tensor* grad = ones_tensor(current->shape_b, false, NULL, NOOP);
+    for (int32_t i = list->size-2; i >= 0; i--) {
+        if (current->op) {
+            current->pfn(current);
+        }
+        current = list->nodes[i];
+    }
 }
 
-
-
-
-void add_backwards(struct tensor* current, struct tensor* current_grads) {
-}
