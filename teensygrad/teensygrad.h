@@ -25,22 +25,27 @@ enum Op {
     MUL
 };
 
-size_t op_radix(enum Op op);
 
+//rename structs (teensygrad namespace, sort of)
 struct tensor {
     struct shape* shape_b;
     float* buffer;
     uint64_t size;
 
-    bool calculate_grads;
+    //maybe a context struct?
     struct tensor** parents;
+    void (*pfn)(struct tensor*);
     enum Op op;
 
+    bool calculate_grads;
     struct tensor* grads;
 };
 
+size_t op_radix(enum Op op);
+
 struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
 struct tensor* ones_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
+void destroy_tensor(struct tensor* t);
 //TODO:
 //format function, properly shaped like numpy
 //scalar mul, scaled_uniform, random, dot product (maybe multiple ops make up dot product, like tinygrad?)
@@ -51,8 +56,11 @@ struct tensor* from_buffer(struct shape* s, float* buffer, bool requires_grads);
 bool same_shape(struct tensor* a, struct tensor* b);
 
 //elementwise ops
-struct tensor* add_tensors(struct tensor* a, struct tensor* b);
+struct tensor* add_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
+void add_backwards(struct tensor* self);
+
 struct tensor* mul_tensors(struct tensor* a, struct tensor* b);
+
 struct tensor* relu_tensor(struct tensor* t);
 
 void zero(struct tensor* t);
