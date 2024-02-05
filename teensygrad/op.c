@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "teensygrad.h"
 
 //this could be done better, do switch case
@@ -13,6 +14,6 @@ size_t op_radix(enum Op op) {
         case MUL:
             return 2;
         default:
-            return 0;
+            assert(false && "This op is not implemented.");
     }
 }
