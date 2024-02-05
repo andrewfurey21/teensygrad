@@ -10,10 +10,11 @@ struct shape {
     uint32_t size;
     char* str;
 };
-//TODO: change to simple array, with max size, null terminated like a string.
-struct shape create_shape(uint32_t* dims, uint32_t size);
-struct shape create_shape_1d(uint32_t dim);
-struct shape create_shape_2d(uint32_t dim1, uint32_t dim2);
+//TODO: change to simple array, with max size, null terminated like a string. (kind of like ggml)
+struct shape* create_shape(uint32_t* dims, uint32_t size);
+struct shape* create_shape_1d(uint32_t dim);
+struct shape* create_shape_2d(uint32_t dim1, uint32_t dim2);
+void print_shape(struct shape* s);
 void free_shape(struct shape* s);
 //TODO:print shape, shape_to_str
 
