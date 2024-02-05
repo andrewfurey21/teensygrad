@@ -48,9 +48,6 @@ void backwards(struct tensor* current) {
     struct tensor* grads = ones_tensor(current->shape_b, false, NULL, NOOP);
     destroy_tensor(current->grads);
     current->grads = grads;
-    if (list->size <= 1) {
-        return;
-    }
     for (int32_t i = list->size-2; i >= 0; i--) {
         if (current->op) {
             current->pfn(current);

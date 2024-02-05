@@ -16,14 +16,12 @@ int main(void) {
         buffer3[i] = (float)i-4;
     }
 
-    //struct tensor* weight = from_buffer(&s, buffer, true);
+    struct tensor* weight = from_buffer(s, buffer, true);
     struct tensor* bias = from_buffer(s, buffer3, true);
     struct tensor* input = from_buffer(s, buffer2, true);
 
-    struct tensor* ib = add_tensors(input, bias, true);
-
-    //struct tensor* wi = mul_tensors(weight, input);
-    //struct tensor* out = add_tensors(wi, bias);
+    struct tensor* wi = mul_tensors(weight, input, true);
+    struct tensor* out = add_tensors(wi, bias, true);
 
     //struct tensor* act = relu_tensor(out);
 
@@ -31,21 +29,33 @@ int main(void) {
     print_t(input);
     printf("bias:\n");
     print_t(bias);
-    printf("input + bias:\n");
-    print_t(ib);
+    printf("weight:\n");
+    print_t(weight);
+    printf("input * weight:\n");
+    print_t(wi);
+    printf("wi + bias:\n");
+    print_t(out);
 
     printf("-------------------------------\n");
     printf("Grads before:\n");
     print_t(input->grads);
     print_t(bias->grads);
-    print_t(ib->grads);
+    print_t(weight->grads);
+    print_t(wi->grads);
+    print_t(out->grads);
 
-    backwards(ib);
+    backwards(out);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
+    printf("input:\n");
     print_t(input->grads);
+    printf("bias:\n");
     print_t(bias->grads);
-    print_t(ib->grads);
-    //backwards(act);
+    printf("weight:\n");
+    print_t(weight->grads);
+    printf("input * weight:\n");
+    print_t(wi->grads);
+    printf("wi + bias:\n");
+    print_t(out->grads);
 }

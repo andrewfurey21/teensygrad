@@ -59,7 +59,8 @@ bool same_shape(struct tensor* a, struct tensor* b);
 struct tensor* add_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
 void add_backwards(struct tensor* self);
 
-struct tensor* mul_tensors(struct tensor* a, struct tensor* b);
+struct tensor* mul_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
+void mul_backwards(struct tensor* self);
 
 struct tensor* relu_tensor(struct tensor* t);
 

@@ -119,8 +119,19 @@ struct tensor* add_tensors(struct tensor* a, struct tensor* b, bool requires_gra
     return t;
 }
 
+void mul_backwards(struct tensor* self) {
+    struct tensor* grads_1 = mul_tensors(self->grads, self->parents[0], false);
+    struct tensor* grads_0 = mul_tensors(self->grads, self->parents[1], false);
 
-struct tensor* mul_tensors(struct tensor* a, struct tensor* b) {
+    destroy_tensor(self->parents[0]->grads);
+    destroy_tensor(self->parents[1]->grads);
+
+    self->parents[0]->grads = grads_0;
+    self->parents[1]->grads = grads_1;
+}
+
+
+struct tensor* mul_tensors(struct tensor* a, struct tensor* b, bool requires_grad) {
     assert(same_shape(a, b) && "Tensors are not the same shape.");
     struct shape* shape_copy = create_shape(a->shape_b->dims, a->shape_b->size);
 
@@ -129,7 +140,8 @@ struct tensor* mul_tensors(struct tensor* a, struct tensor* b) {
     parents[0] = a;
     parents[1] = b;
 
-    struct tensor* t = create_tensor(shape_copy, true, parents, MUL);
+    struct tensor* t = create_tensor(shape_copy, requires_grad, parents, MUL);
+    t->pfn = &mul_backwards;
 
     //could easily be vectorized.
     for (uint64_t i = 0; i < a->size; i++) {
