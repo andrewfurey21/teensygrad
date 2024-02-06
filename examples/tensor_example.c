@@ -17,7 +17,7 @@ int main(void) {
     }
     buffer3[0] = 4.0f;
 
-    struct teensy_tensor* input = teensy_tensor_from_buffer(s, buffer2, true);
+    struct teensy_tensor* input = teensy_tensor_from_buffer(s, buffer2, false);
     struct teensy_tensor* weight = teensy_tensor_from_buffer(s, buffer, true);
     struct teensy_tensor* bias = teensy_tensor_from_buffer(s_bias, buffer3, true);
 
