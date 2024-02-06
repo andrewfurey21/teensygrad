@@ -14,7 +14,7 @@ uint64_t buflen(struct teensy_shape* s) {
     }
     return size;
 }
-
+//TODO:double check, parents should be null?
 struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad, struct teensy_tensor** parents, enum teensy_op op) {
     uint64_t size = buflen(s);
     float* buffer = (float*)calloc(size, size*(uint64_t)sizeof(float));
@@ -27,7 +27,7 @@ struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_
     }
 
     struct teensy_tensor* t = (struct teensy_tensor*)malloc(sizeof(struct teensy_tensor));
-    //TODO: copy everything!
+
     t->shape = teensy_shape_copy;
     t->buffer = buffer;
     t->size = size;

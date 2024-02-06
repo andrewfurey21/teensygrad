@@ -30,7 +30,7 @@ bool already_visited(struct teensy_graph* list, struct teensy_tensor* t) {
 void topo_sort(struct teensy_graph* list, struct teensy_tensor* current) {
     for (size_t i = 0; i < op_radix(current->op); i++) {
         struct teensy_tensor* parent = current->parents[i];
-        if (!already_visited(list, parent)) {
+        if (!already_visited(list, parent) && parent->requires_grad) {
             topo_sort(list, parent);
         }
     }
