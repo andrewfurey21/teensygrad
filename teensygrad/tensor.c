@@ -78,7 +78,6 @@ struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* b
     return ret;
 }
 
-//TODO: clean up, print teensy_shape as well, better formatting
 void teensy_tensor_print(struct teensy_tensor* t) {
     printf("Teensy_Tensor:[");
     for (int i = 0; i < t->size; i++) {
@@ -87,9 +86,6 @@ void teensy_tensor_print(struct teensy_tensor* t) {
     printf("]\n");
 }
 
-//TODO:zeroing out function
-//TODO:take requires grad into account!
-////TODO:could easily be vectorized.
 void _add_backwards(struct teensy_tensor* self) {
     struct teensy_tensor* grads_0 = teensy_tensor_add(self->grads, self->parents[0]->grads, false);
     struct teensy_tensor* grads_1 = teensy_tensor_add(self->grads, self->parents[1]->grads, false);
