@@ -21,6 +21,7 @@ void free_shape(struct shape* s);
 enum Op {
     NOOP=0,
     RELU,
+    SUM_REDUCE,
     ADD,
     MUL
 };
@@ -64,6 +65,9 @@ void mul_backwards(struct tensor* self);
 
 struct tensor* relu_tensor(struct tensor* t, bool requires_grad);
 void relu_backwards(struct tensor* self);
+
+struct tensor* sum_reduce_tensors(struct tensor* a, bool requires_grad);
+void sum_reduce_backwards(struct tensor* self);
 
 void zero(struct tensor* t);
 

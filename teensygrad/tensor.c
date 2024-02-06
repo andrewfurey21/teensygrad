@@ -186,6 +186,35 @@ struct tensor* relu_tensor(struct tensor* a, bool requires_grad) {
     return t;
 }
 
+void sum_reduce_backwards(struct tensor* self) {
+    //struct tensor* grads = add_tensors(self->grads, self->parents[0]->grads, false);
+    struct tensor* grads = ones_tensor(self->parents[0]->shape_b, false, NULL, NOOP);
+
+    destroy_tensor(self->parents[0]->grads);
+
+    self->parents[0]->grads = grads;
+}
+
+struct tensor* sum_reduce_tensors(struct tensor* a, bool requires_grad) {
+    struct shape* shape_copy = create_shape_1d(1);
+
+    struct tensor** parents = (struct tensor**)malloc(op_radix(SUM_REDUCE)*sizeof(struct tensor*));
+    parents[0] = a;
+
+    struct tensor* t = create_tensor(shape_copy, requires_grad, parents, SUM_REDUCE);
+    t->pfn = &sum_reduce_backwards;
+
+    //TODO:could easily be vectorized.
+    double sum = 0.0f;
+    for (uint64_t i = 0; i < a->size; i++) {
+        sum += a->buffer[i];
+    }
+
+    t->buffer[0] = sum;
+
+    return t;
+}
+
 void zero(struct tensor* t) {
     memset(t->buffer, 0, t->size);
 }

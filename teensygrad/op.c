@@ -6,6 +6,7 @@ size_t op_radix(enum Op op) {
         case NOOP:
             return 0;
         case RELU:
+        case SUM_REDUCE:
             return 1;
         case ADD:
         case MUL:
