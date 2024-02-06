@@ -5,20 +5,7 @@
 #ifndef _TEENSYGRAD_H
 #define _TEENSYGRAD_H
 
-struct shape {
-    uint32_t* dims;
-    uint32_t size;
-    char* str;
-};
-//TODO: change to simple array, with max size, null terminated like a string. (kind of like ggml)
-struct shape* create_shape(uint32_t* dims, uint32_t size);
-struct shape* create_shape_1d(uint32_t dim);
-struct shape* create_shape_2d(uint32_t dim1, uint32_t dim2);
-void print_shape(struct shape* s);
-void destroy_shape(struct shape* s);
-//TODO:print shape, shape_to_str
-
-enum Op {
+enum teensy_op {
     NOOP=0,
     RELU,
     SUM_REDUCE,
@@ -26,54 +13,47 @@ enum Op {
     MUL
 };
 
+size_t op_radix(enum teensy_op op);
 
-//rename structs (teensygrad namespace, sort of)
-struct tensor {
-    struct shape* shape_b;
+struct teensy_shape {
+    uint32_t* dims;
+    uint32_t size;
+};
+
+struct teensy_shape* teensy_shape_create(uint32_t* dims, uint32_t size);
+struct teensy_shape* teensy_shape_create_1d(uint32_t dim);
+struct teensy_shape* teensy_shape_create_2d(uint32_t dim1, uint32_t dim2);
+void teensy_shape_print(struct teensy_shape* s);
+void teensy_shape_destroy(struct teensy_shape* s);
+
+
+struct teensy_tensor {
+    struct teensy_shape* shape;
     float* buffer;
     uint64_t size;
 
-    //maybe a context struct?
-    struct tensor** parents;
-    void (*pfn)(struct tensor*);//rename
-    enum Op op;
+    struct teensy_tensor** parents;
+    void (*_backwards)(struct teensy_tensor*);
+    enum teensy_op op;
 
-    bool calculate_grads;
-    struct tensor* grads;
+    bool requires_grad;
+    struct teensy_tensor* grads;
 };
 
-size_t op_radix(enum Op op);
-
-struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
-struct tensor* ones_tensor(struct shape* s, bool requires_grad, struct tensor** parents, enum Op op);
-void destroy_tensor(struct tensor* t);
-//TODO:
-//format function, properly shaped like numpy
-//scalar mul, scaled_uniform, random, dot product (maybe multiple ops make up dot product, like tinygrad?)
-//cleanup, mort structures, multiple types (void* buffer), some more functions for creating/manipulating tensors
-
-void print_t(struct tensor* t);
-struct tensor* from_buffer(struct shape* s, float* buffer, bool requires_grads);
-bool same_shape(struct tensor* a, struct tensor* b);
+struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* buffer, bool requires_grads);
+struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad, struct teensy_tensor** parents, enum teensy_op op);
+struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad, struct teensy_tensor** parents, enum teensy_op op);
+void teensy_tensor_to_zeros(struct teensy_tensor* t);
+bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b);
+void teensy_tensor_print(struct teensy_tensor* t);
+void teensy_tensor_destroy(struct teensy_tensor* t);
 
 //elementwise ops
-struct tensor* add_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
-void add_backwards(struct tensor* self);
-
-struct tensor* mul_tensors(struct tensor* a, struct tensor* b, bool requires_grad);
-void mul_backwards(struct tensor* self);
-
-struct tensor* relu_tensor(struct tensor* t, bool requires_grad);
-void relu_backwards(struct tensor* self);
-
-struct tensor* sum_reduce_tensors(struct tensor* a, bool requires_grad);
-void sum_reduce_backwards(struct tensor* self);
-
-void zero(struct tensor* t);
-
+struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
+struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
+struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* t, bool requires_grad);
+//reduce ops
+struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad);
 //backprop
-void backwards(struct tensor* current);
-
-//TODO: loss function
-
+void teensy_backwards(struct teensy_tensor* current);
 #endif

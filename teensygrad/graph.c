@@ -5,20 +5,19 @@
 
 #define MAX_NODES 100
 
-struct graph {
-    struct tensor** nodes;
+struct teensy_graph {
+    struct teensy_tensor** nodes;
     size_t size;
 };
 
-struct graph* create_graph() {
-    struct graph* list = (struct graph*)malloc(sizeof(struct graph));
-    list->nodes = (struct tensor**)malloc(sizeof(struct tensor*)*MAX_NODES);
+struct teensy_graph* teensy_graph_create() {
+    struct teensy_graph* list = (struct teensy_graph*)malloc(sizeof(struct teensy_graph));
+    list->nodes = (struct teensy_tensor**)malloc(sizeof(struct teensy_tensor*)*MAX_NODES);
     list->size = 0;
     return list;
 }
 
-//O(n) :(, need hash_set like ggml
-bool already_visited(struct graph* list, struct tensor* t) {
+bool already_visited(struct teensy_graph* list, struct teensy_tensor* t) {
     for (size_t i = 0; i < list->size; i++) {
         if (list->nodes[i] == t) {
             return true;
@@ -28,29 +27,29 @@ bool already_visited(struct graph* list, struct tensor* t) {
 }
 
 //sorts graph in reversed topological order
-void topo_sort(struct graph* list, struct tensor* current) {
+void topo_sort(struct teensy_graph* list, struct teensy_tensor* current) {
     for (size_t i = 0; i < op_radix(current->op); i++) {
-        struct tensor* parent = current->parents[i];
+        struct teensy_tensor* parent = current->parents[i];
         if (!already_visited(list, parent)) {
             topo_sort(list, parent);
         }
     }
     list->nodes[list->size] = current;
     list->size += 1;
-    assert(list->size < MAX_NODES && "Too many nodes in the graph.");
+    assert(list->size < MAX_NODES && "Too many nodes in the teensy_graph.");
 }
 
-//calculate gradient of current,
-void backwards(struct tensor* current) {
-    struct graph* list = create_graph();
+//iteratively call _backwards on nodes, which calculates gradients on parent nodes.
+void teensy_backwards(struct teensy_tensor* current) {
+    struct teensy_graph* list = teensy_graph_create();
     topo_sort(list, current);
 
-    struct tensor* grads = ones_tensor(current->shape_b, false, NULL, NOOP);
-    destroy_tensor(current->grads);
+    struct teensy_tensor* grads = teensy_tensor_zeros(current->shape, false, NULL, NOOP);
+    teensy_tensor_destroy(current->grads);
     current->grads = grads;
     for (int32_t i = list->size-2; i >= 0; i--) {
         if (current->op) {
-            current->pfn(current);
+            current->_backwards(current);
         }
         current = list->nodes[i];
     }

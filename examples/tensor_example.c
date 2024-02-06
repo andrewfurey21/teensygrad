@@ -4,8 +4,8 @@
 
 int main(void) {
     int buf_size = 2;
-    struct shape* s = create_shape_1d(buf_size);
-    struct shape* s_bias = create_shape_1d(1);
+    struct teensy_shape* s = teensy_shape_create_1d(buf_size);
+    struct teensy_shape* s_bias = teensy_shape_create_1d(1);
 
     float* buffer = (float*)malloc(buf_size*sizeof(float));
     float* buffer2 = (float*)malloc(buf_size*sizeof(float));
@@ -17,66 +17,66 @@ int main(void) {
     }
     buffer3[0] = 4.0f;
 
-    struct tensor* input = from_buffer(s, buffer2, true);
-    struct tensor* weight = from_buffer(s, buffer, true);
-    struct tensor* bias = from_buffer(s_bias, buffer3, true);
+    struct teensy_tensor* input = teensy_tensor_from_buffer(s, buffer2, true);
+    struct teensy_tensor* weight = teensy_tensor_from_buffer(s, buffer, true);
+    struct teensy_tensor* bias = teensy_tensor_from_buffer(s_bias, buffer3, true);
 
-    struct tensor* wi = mul_tensors(weight, input, true);
-    struct tensor* dot_wi = sum_reduce_tensors(wi, true);
-    struct tensor* out = add_tensors(dot_wi, bias, true);
+    struct teensy_tensor* wi = teensy_tensor_mul(weight, input, true);
+    struct teensy_tensor* dot_wi = teensy_tensor_sum(wi, true);
+    struct teensy_tensor* out = teensy_tensor_add(dot_wi, bias, true);
 
-    struct tensor* act = relu_tensor(out, true);
+    struct teensy_tensor* act = teensy_tensor_relu(out, true);
 
     printf("input:");
-    print_t(input);
+    teensy_tensor_print(input);
     printf("bias:");
-    print_t(bias);
+    teensy_tensor_print(bias);
     printf("weight:");
-    print_t(weight);
+    teensy_tensor_print(weight);
     printf("input * weight:");
-    print_t(wi);
+    teensy_tensor_print(wi);
     printf("sum(inputs * weights)");
-    print_t(dot_wi);
+    teensy_tensor_print(dot_wi);
     printf("sum(inputs * weights) + bias");
-    print_t(out);
+    teensy_tensor_print(out);
     printf("relu(sum(inputs * weights) + bias):");
-    print_t(act);
+    teensy_tensor_print(act);
 
     printf("-------------------------------\n");
     printf("Grads before:\n");
     printf("input:");
-    print_t(input->grads);
+    teensy_tensor_print(input->grads);
     printf("bias:");
-    print_t(bias->grads);
+    teensy_tensor_print(bias->grads);
     printf("weight:");
-    print_t(weight->grads);
+    teensy_tensor_print(weight->grads);
     printf("input * weight:");
-    print_t(wi->grads);
+    teensy_tensor_print(wi->grads);
     printf("sum(inputs * weights)");
-    print_t(dot_wi->grads);
+    teensy_tensor_print(dot_wi->grads);
     printf("sum(inputs * weights) + bias");
-    print_t(out->grads);
+    teensy_tensor_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
-    print_t(act->grads);
+    teensy_tensor_print(act->grads);
 
     printf("-------------------------------\n");
     printf("Performing backprop:\n");
-    backwards(act);
+    teensy_backwards(act);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
     printf("input:");
-    print_t(input->grads);
+    teensy_tensor_print(input->grads);
     printf("bias:");
-    print_t(bias->grads);
+    teensy_tensor_print(bias->grads);
     printf("weight:");
-    print_t(weight->grads);
+    teensy_tensor_print(weight->grads);
     printf("input * weight:");
-    print_t(wi->grads);
+    teensy_tensor_print(wi->grads);
     printf("sum(inputs * weights)");
-    print_t(dot_wi->grads);
+    teensy_tensor_print(dot_wi->grads);
     printf("sum(inputs * weights) + bias");
-    print_t(out->grads);
+    teensy_tensor_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
-    print_t(act->grads);
+    teensy_tensor_print(act->grads);
 }
