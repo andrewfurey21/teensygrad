@@ -40,7 +40,7 @@ struct tensor* create_tensor(struct shape* s, bool requires_grad, struct tensor*
 }
 
 void destroy_tensor(struct tensor* t) {
-    free(t->shape_b);
+    destroy_shape(t->shape_b);
     free(t->buffer);
     free(t->parents);
     if (t->calculate_grads) {

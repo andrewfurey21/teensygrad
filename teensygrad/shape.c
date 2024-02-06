@@ -30,8 +30,9 @@ struct shape* create_shape_2d(uint32_t dim1, uint32_t dim2) {
     return create_shape(dims, 2);
 }
 
-void free_shape(struct shape* s) {
+void destroy_shape(struct shape* s) {
     free(s->dims);
+    free(s);
 }
 
 bool same_shape(struct tensor* a, struct tensor* b) {
