@@ -47,6 +47,7 @@ struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_g
 struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad);
 void teensy_tensor_to_zeros(struct teensy_tensor* t);
 bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b);
+void teensy_tensor_copy_buffer(struct teensy_tensor* a, struct teensy_tensor* b);
 void teensy_tensor_print(struct teensy_tensor* t);
 void teensy_tensor_destroy(struct teensy_tensor* t);
 
@@ -62,11 +63,12 @@ void teensy_backwards(struct teensy_tensor* current);
 
 struct teensy_optimizer {
     struct teensy_tensor** params;
+    uint64_t size;
     float learning_rate;
     void (*step)();
 };
 
 void teensy_sgd(struct teensy_optimizer* optim);
-struct teensy_optimizer* teensy_optimizer_create(struct teensy_tensor** params, float learning_rate, void (*step)(struct teensy_optimizer*));
+struct teensy_optimizer* teensy_optimizer_create(struct teensy_tensor** params, uint64_t size, float lr, void (*step)(struct teensy_optimizer*));
 
 #endif
