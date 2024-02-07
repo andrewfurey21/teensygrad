@@ -198,8 +198,13 @@ void _relu_backwards(struct teensy_tensor* self) {
             grads->buffer[i] = 1;
         }
     }
+    //TODO:refactor this into a function
+    struct teensy_tensor* mul_grads = teensy_tensor_mul(self->grads, grads, false);
+    struct teensy_tensor* acc_grads = teensy_tensor_add(self->parents[0]->grads, mul_grads, false);
+    teensy_tensor_destroy(grads);
     teensy_tensor_destroy(self->parents[0]->grads);
-    self->parents[0]->grads = grads;
+    teensy_tensor_destroy(mul_grads);
+    self->parents[0]->grads = acc_grads;
 }
 
 struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* a, bool requires_grad) {
@@ -225,10 +230,16 @@ void _sum_backwards(struct teensy_tensor* self) {
         return;
     }
     struct teensy_tensor* grads = teensy_tensor_ones(self->parents[0]->shape, false);
+    //TODO:Expand
+    struct teensy_tensor* expanded_grads = teensy_tensor_full_like(grads->shape, self->grads->buffer[0], false);
+    struct teensy_tensor* mul_grads = teensy_tensor_mul(expanded_grads, grads, false);
+    struct teensy_tensor* acc_grads = teensy_tensor_add(self->parents[0]->grads, mul_grads, false);
 
+    teensy_tensor_destroy(grads);
+    teensy_tensor_destroy(mul_grads);
     teensy_tensor_destroy(self->parents[0]->grads);
 
-    self->parents[0]->grads = grads;
+    self->parents[0]->grads = acc_grads;
 }
 
 struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad) {
