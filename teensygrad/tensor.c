@@ -68,6 +68,14 @@ struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* b
     return ret;
 }
 
+struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad) {
+    struct teensy_tensor* t = teensy_tensor_zeros(s, requires_grad);
+    for (uint64_t i = 0; i < t->size; i++) {
+        t->buffer[i] = fill_value;
+    }
+    return t;
+}
+
 void teensy_tensor_to_zeros(struct teensy_tensor* t) {
     memset(t->buffer, 0, t->size);
 }
@@ -243,4 +251,3 @@ struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_g
 
     return t;
 }
-
