@@ -59,4 +59,14 @@ struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* t, bool requires_
 struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad);
 //backprop
 void teensy_backwards(struct teensy_tensor* current);
+
+struct teensy_optimizer {
+    struct teensy_tensor** params;
+    float learning_rate;
+    void (*step)();
+};
+
+void teensy_sgd(struct teensy_optimizer* optim);
+struct teensy_optimizer* teensy_optimizer_create(struct teensy_tensor** params, float learning_rate, void (*step)(struct teensy_optimizer*));
+
 #endif
