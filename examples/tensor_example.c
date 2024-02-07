@@ -4,6 +4,10 @@
 
 int main(void) {
     int buf_size = 2;
+    struct teensy_shape* s100 = teensy_shape_create_1d(100);
+    struct teensy_tensor* uni = teensy_tensor_scaled_uniform(s100, -8, 17, false);
+    teensy_tensor_print(uni);
+
     struct teensy_shape* s = teensy_shape_create_1d(buf_size);
     struct teensy_shape* s_bias = teensy_shape_create_1d(1);
 

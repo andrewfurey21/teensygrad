@@ -1,8 +1,10 @@
 #include "stdlib.h"
+#include "time.h"
 #include "stdint.h"
 #include "stdbool.h"
 #include "stdio.h"
 #include "assert.h"
+#include "math.h"
 #include "string.h"
 
 #include "teensygrad.h"
@@ -72,6 +74,14 @@ struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill
     struct teensy_tensor* t = teensy_tensor_zeros(s, requires_grad);
     for (uint64_t i = 0; i < t->size; i++) {
         t->buffer[i] = fill_value;
+    }
+    return t;
+}
+
+struct teensy_tensor* teensy_tensor_scaled_uniform(struct teensy_shape* s, float min, float max, bool requires_grad) {
+    struct teensy_tensor* t = teensy_tensor_zeros(s, requires_grad);
+    for (uint64_t i = 0; i < t->size; i++) {
+        t->buffer[i] = (max-min)/(float)t->size*i+min;//-fabs(min);
     }
     return t;
 }

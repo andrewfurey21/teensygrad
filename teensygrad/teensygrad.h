@@ -45,6 +45,7 @@ struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* b
 struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad);
 struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad);
 struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad);
+struct teensy_tensor* teensy_tensor_scaled_uniform(struct teensy_shape* s, float min, float max, bool requires_grad);
 void teensy_tensor_to_zeros(struct teensy_tensor* t);
 bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b);
 void teensy_tensor_copy_buffer(struct teensy_tensor* a, struct teensy_tensor* b);
