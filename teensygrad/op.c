@@ -6,6 +6,7 @@ size_t op_radix(enum teensy_op op) {
         case NOOP:
             return 0;
         case RELU:
+        case NEG:
         case SUM_REDUCE:
             return 1;
         case ADD:

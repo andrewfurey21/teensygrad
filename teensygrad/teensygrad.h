@@ -8,6 +8,7 @@
 enum teensy_op {
     NOOP=0,
     RELU,
+    NEG,
     SUM_REDUCE,
     ADD,
     MUL
@@ -51,9 +52,8 @@ void teensy_tensor_destroy(struct teensy_tensor* t);
 
 //elementwise ops
 struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
-struct teensy_tensor* teensy_tensor_sub(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
+struct teensy_tensor* teensy_tensor_neg(struct teensy_tensor* a, bool requires_grad);
 struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
-struct teensy_tensor* teensy_tensor_pow(struct teensy_tensor* t, struct teensy_tensor* pow, bool requires_grad);
 struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* t, bool requires_grad);
 //reduce ops
 struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad);

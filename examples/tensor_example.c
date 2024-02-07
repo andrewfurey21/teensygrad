@@ -26,6 +26,7 @@ int main(void) {
     struct teensy_tensor* out = teensy_tensor_add(dot_wi, bias, true);
 
     struct teensy_tensor* act = teensy_tensor_relu(out, true);
+    struct teensy_tensor* neg_act = teensy_tensor_neg(act, true);
 
     printf("input:");
     teensy_tensor_print(input);
@@ -41,6 +42,8 @@ int main(void) {
     teensy_tensor_print(out);
     printf("relu(sum(inputs * weights) + bias):");
     teensy_tensor_print(act);
+    printf("-relu(sum(inputs * weights) + bias):");
+    teensy_tensor_print(neg_act);
 
     printf("-------------------------------\n");
     printf("Grads before:\n");
@@ -58,10 +61,12 @@ int main(void) {
     teensy_tensor_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
     teensy_tensor_print(act->grads);
+    printf("-relu(sum(inputs * weights) + bias):");
+    teensy_tensor_print(neg_act->grads);
 
     printf("-------------------------------\n");
     printf("Performing backprop:\n");
-    teensy_backwards(act);
+    teensy_backwards(neg_act);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
@@ -79,4 +84,6 @@ int main(void) {
     teensy_tensor_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
     teensy_tensor_print(act->grads);
+    printf("-relu(sum(inputs * weights) + bias):");
+    teensy_tensor_print(neg_act->grads);
 }
