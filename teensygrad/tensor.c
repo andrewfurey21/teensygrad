@@ -104,6 +104,13 @@ void teensy_tensor_print(struct teensy_tensor* t) {
     printf("]\n");
 }
 
+void teensy_tensor_copy_buffer(struct teensy_tensor* a, struct teensy_tensor* b) {
+    assert(teensy_tensor_same_shape(a, b) && "Tensors are not the same shape.");
+    for (uint64_t i = 0; i < a->size; i++) {
+        a->buffer[i] = b->buffer[i];
+    }
+}
+
 void teensy_tensor_destroy(struct teensy_tensor* t) {
     teensy_shape_destroy(t->shape);
     free(t->buffer);
