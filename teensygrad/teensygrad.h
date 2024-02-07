@@ -41,8 +41,9 @@ struct teensy_tensor {
 };
 
 struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* buffer, bool requires_grads);
-struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad, struct teensy_tensor** parents, enum teensy_op op);
-struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad, struct teensy_tensor** parents, enum teensy_op op);
+struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad);
+struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad);
+struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad);
 void teensy_tensor_to_zeros(struct teensy_tensor* t);
 bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b);
 void teensy_tensor_print(struct teensy_tensor* t);
@@ -50,7 +51,10 @@ void teensy_tensor_destroy(struct teensy_tensor* t);
 
 //elementwise ops
 struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
+struct teensy_tensor* teensy_tensor_sub(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
 struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
+struct teensy_tensor* teensy_tensor_scalar_mul(struct teensy_tensor* t, float pow, bool requires_grad);
+struct teensy_tensor* teensy_tensor_float_pow(struct teensy_tensor* t, float pow, bool requires_grad);
 struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* t, bool requires_grad);
 //reduce ops
 struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad);

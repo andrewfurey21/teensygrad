@@ -45,7 +45,7 @@ void teensy_backwards(struct teensy_tensor* current) {
     struct teensy_graph* list = teensy_graph_create();
     topo_sort(list, current);
 
-    struct teensy_tensor* grads = teensy_tensor_ones(current->shape, false, NULL, NOOP);
+    struct teensy_tensor* grads = teensy_tensor_ones(current->shape, false);
     teensy_tensor_destroy(current->grads);
     current->grads = grads;
     for (int32_t i = list->size-2; i >= 0; i--) {
