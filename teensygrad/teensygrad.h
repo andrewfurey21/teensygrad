@@ -62,6 +62,7 @@ struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_g
 //backprop
 void teensy_backwards(struct teensy_tensor* current);
 
+//could have a void* with other params for different optimizers.
 struct teensy_optimizer {
     struct teensy_tensor** params;
     uint64_t size;

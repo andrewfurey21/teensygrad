@@ -25,7 +25,7 @@ int main(void) {
     struct teensy_tensor* weight = teensy_tensor_from_buffer(s, buffer, true);
     struct teensy_tensor* bias = teensy_tensor_from_buffer(s_bias, buffer3, true);
 
-    struct teensy_tensor* wi = teensy_tensor_mul(weight, input, true);
+    struct teensy_tensor* wi = teensy_tensor_mul(weight, input, false);
     struct teensy_tensor* dot_wi = teensy_tensor_sum(wi, true);
     struct teensy_tensor* out = teensy_tensor_add(dot_wi, bias, true);
 
