@@ -1,6 +1,5 @@
 #include "assert.h"
-#include "stdlib.h"
-#include "../teensygrad.h"
+#include "../include/teensygrad.h"
 
 void teensy_sgd(struct teensy_optimizer* optim) {
     for (uint64_t i = 0; i < optim->size; i++) {

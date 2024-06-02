@@ -1,5 +1,5 @@
 #include "assert.h"
-#include "teensygrad.h"
+#include "../include/teensygrad.h"
 
 size_t op_radix(enum teensy_op op) {
     switch (op) {

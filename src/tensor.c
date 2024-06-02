@@ -4,10 +4,9 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "assert.h"
-#include "math.h"
 #include "string.h"
 
-#include "teensygrad.h"
+#include "../include/teensygrad.h"
 
 uint64_t buflen(struct teensy_shape* s) {
     uint64_t size = 1;

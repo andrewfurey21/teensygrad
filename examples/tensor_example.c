@@ -1,6 +1,6 @@
 #include "stdio.h"
 #include "stdlib.h"
-#include "../teensygrad/teensygrad.h"
+#include "../include/teensygrad.h"
 
 int main(void) {
     int buf_size = 2;

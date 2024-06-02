@@ -2,7 +2,7 @@
 #include "assert.h"
 #include "stdlib.h"
 #include "stdio.h"
-#include "teensygrad.h"
+#include "../include/teensygrad.h"
 
 #define MAX_DIMS 4
 

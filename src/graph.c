@@ -1,7 +1,7 @@
 #include "stdbool.h"
 #include "assert.h"
 #include "stdio.h"
-#include "teensygrad.h"
+#include "../include/teensygrad.h"
 
 #define MAX_NODES 100
 
