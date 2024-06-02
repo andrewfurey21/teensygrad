@@ -3,8 +3,8 @@
 DEBUG=0
 
 ALIB=libteensygrad.a
-OBJDIR=obj/
-SRCDIR=src/
+OBJDIR=./obj/
+SRCDIR=./src/
 
 CC=gcc
 AR=ar
@@ -14,8 +14,10 @@ LDFLAGS=
 COMMON= -Iinclude/ -Isrc/
 CFLAGS=-Wall
 
-EXAMPLE=examples/tensor_example.c
+# TODO: compile multiple binaries for multiple examples
+EXAMPLE=./examples/tensor_example.c
 EXEC=example
+EXECDIR=./build
 
 ifeq ($(DEBUG), 1) 
 OPTS=-O0 -g
@@ -28,10 +30,10 @@ OBJ=graph.o op.o optimizers.o shape.o tensor.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = Makefile include/teensygrad.h
 
-all: $(OBJDIR) $(ALIB) $(EXEC)
+all: $(EXECDIR) $(OBJDIR) $(ALIB) $(EXEC)
 
 $(EXEC): $(ALIB) $(OBJDIR) $(EXAMPLE)
-	$(CC) $(COMMON) $(CFLAGS) $(EXAMPLE) -o $@ $(ALIB)
+	$(CC) $(COMMON) $(CFLAGS) $(EXAMPLE) -o $(EXECDIR)/$@ $(ALIB)
 
 $(ALIB): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
@@ -40,8 +42,11 @@ $(OBJDIR)%.o: $(SRCDIR)%.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR):
-	@mkdir -p $(OBJDIR)
+	@mkdir -p $@
+
+$(EXECDIR):
+	@mkdir -p $@
 
 .PHONY: clean
 clean:
-	@rm -rf $(ALIB) $(OBJDIR) $(EXEC)
+	@rm -rf $(ALIB) $(OBJDIR) $(EXECDIR)
