@@ -4,12 +4,12 @@
 
 int main(void) {
     int buf_size = 2;
-    struct teensy_shape* s100 = teensy_shape_create_1d(100);
-    struct teensy_tensor* uni = teensy_tensor_scaled_uniform(s100, -8, 17, false);
-    teensy_tensor_print(uni);
+    struct tshape* s100 = tshape_create_1d(100);
+    struct tt* uni = tt_scaled_uniform(s100, -8, 17, false);
+    tt_print(uni);
 
-    struct teensy_shape* s = teensy_shape_create_1d(buf_size);
-    struct teensy_shape* s_bias = teensy_shape_create_1d(1);
+    struct tshape* s = tshape_create_1d(buf_size);
+    struct tshape* s_bias = tshape_create_1d(1);
 
     float* buffer = (float*)malloc(buf_size*sizeof(float));
     float* buffer2 = (float*)malloc(buf_size*sizeof(float));
@@ -21,73 +21,73 @@ int main(void) {
     }
     buffer3[0] = 4.0f;
 
-    struct teensy_tensor* input = teensy_tensor_from_buffer(s, buffer2, false);
-    struct teensy_tensor* weight = teensy_tensor_from_buffer(s, buffer, true);
-    struct teensy_tensor* bias = teensy_tensor_from_buffer(s_bias, buffer3, true);
+    struct tt* input = tt_from_buffer(s, buffer2, false);
+    struct tt* weight = tt_from_buffer(s, buffer, true);
+    struct tt* bias = tt_from_buffer(s_bias, buffer3, true);
 
-    struct teensy_tensor* wi = teensy_tensor_mul(weight, input, false);
-    struct teensy_tensor* dot_wi = teensy_tensor_sum(wi, true);
-    struct teensy_tensor* out = teensy_tensor_add(dot_wi, bias, true);
+    struct tt* wi = tt_mul(weight, input, false);
+    struct tt* dot_wi = tt_sum(wi, true);
+    struct tt* out = tt_add(dot_wi, bias, true);
 
-    struct teensy_tensor* act = teensy_tensor_relu(out, true);
-    struct teensy_tensor* neg_act = teensy_tensor_neg(act, true);
+    struct tt* act = tt_relu(out, true);
+    struct tt* neg_act = tt_neg(act, true);
 
     printf("input:");
-    teensy_tensor_print(input);
+    tt_print(input);
     printf("bias:");
-    teensy_tensor_print(bias);
+    tt_print(bias);
     printf("weight:");
-    teensy_tensor_print(weight);
+    tt_print(weight);
     printf("input * weight:");
-    teensy_tensor_print(wi);
+    tt_print(wi);
     printf("sum(inputs * weights)");
-    teensy_tensor_print(dot_wi);
+    tt_print(dot_wi);
     printf("sum(inputs * weights) + bias");
-    teensy_tensor_print(out);
+    tt_print(out);
     printf("relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(act);
+    tt_print(act);
     printf("-relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(neg_act);
+    tt_print(neg_act);
 
     printf("-------------------------------\n");
     printf("Grads before:\n");
     printf("input:");
-    teensy_tensor_print(input->grads);
+    tt_print(input->grads);
     printf("bias:");
-    teensy_tensor_print(bias->grads);
+    tt_print(bias->grads);
     printf("weight:");
-    teensy_tensor_print(weight->grads);
+    tt_print(weight->grads);
     printf("input * weight:");
-    teensy_tensor_print(wi->grads);
+    tt_print(wi->grads);
     printf("sum(inputs * weights)");
-    teensy_tensor_print(dot_wi->grads);
+    tt_print(dot_wi->grads);
     printf("sum(inputs * weights) + bias");
-    teensy_tensor_print(out->grads);
+    tt_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(act->grads);
+    tt_print(act->grads);
     printf("-relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(neg_act->grads);
+    tt_print(neg_act->grads);
 
     printf("-------------------------------\n");
     printf("Performing backprop:\n");
-    teensy_backwards(neg_act);
+    tbackwards(neg_act);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
     printf("input:");
-    teensy_tensor_print(input->grads);
+    tt_print(input->grads);
     printf("bias:");
-    teensy_tensor_print(bias->grads);
+    tt_print(bias->grads);
     printf("weight:");
-    teensy_tensor_print(weight->grads);
+    tt_print(weight->grads);
     printf("input * weight:");
-    teensy_tensor_print(wi->grads);
+    tt_print(wi->grads);
     printf("sum(inputs * weights)");
-    teensy_tensor_print(dot_wi->grads);
+    tt_print(dot_wi->grads);
     printf("sum(inputs * weights) + bias");
-    teensy_tensor_print(out->grads);
+    tt_print(out->grads);
     printf("relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(act->grads);
+    tt_print(act->grads);
     printf("-relu(sum(inputs * weights) + bias):");
-    teensy_tensor_print(neg_act->grads);
+    tt_print(neg_act->grads);
 }

@@ -5,7 +5,7 @@
 #ifndef _TEENSYGRAD_H
 #define _TEENSYGRAD_H
 
-enum teensy_op {
+enum top {
     NOOP=0,
     RELU,
     NEG,
@@ -14,63 +14,63 @@ enum teensy_op {
     MUL
 };
 
-size_t op_radix(enum teensy_op op);
+size_t top_radix(enum top);
 
-struct teensy_shape {
+struct tshape {
     uint32_t* dims;
     uint32_t size;
 };
 
-struct teensy_shape* teensy_shape_create(uint32_t* dims, uint32_t size);
-struct teensy_shape* teensy_shape_create_1d(uint32_t dim);
-struct teensy_shape* teensy_shape_create_2d(uint32_t dim1, uint32_t dim2);
-void teensy_shape_print(struct teensy_shape* s);
-void teensy_shape_destroy(struct teensy_shape* s);
+struct tshape* tshape_create(uint32_t* dims, uint32_t size);
+struct tshape* tshape_create_1d(uint32_t dim);
+struct tshape* tshape_create_2d(uint32_t dim1, uint32_t dim2);
+void tshape_print(struct tshape* s);
+void tshape_destroy(struct tshape* s);
 
 
-struct teensy_tensor {
-    struct teensy_shape* shape;
+struct tt {
+    struct tshape* shape;
     float* buffer;
     uint64_t size;
 
-    struct teensy_tensor** parents;
-    void (*_backwards)(struct teensy_tensor*);
-    enum teensy_op op;
+    struct tt** parents;
+    void (*_backwards)(struct tt*);
+    enum top op;
 
     bool requires_grad;
-    struct teensy_tensor* grads;
+    struct tt* grads;
 };
 
-struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* buffer, bool requires_grads);
-struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad);
-struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad);
-struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad);
-struct teensy_tensor* teensy_tensor_scaled_uniform(struct teensy_shape* s, float min, float max, bool requires_grad);
-void teensy_tensor_to_zeros(struct teensy_tensor* t);
-bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b);
-void teensy_tensor_copy_buffer(struct teensy_tensor* a, struct teensy_tensor* b);
-void teensy_tensor_print(struct teensy_tensor* t);
-void teensy_tensor_destroy(struct teensy_tensor* t);
+struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
+struct tt* tt_zeros(struct tshape* s, bool requires_grad);
+struct tt* tt_ones(struct tshape* s, bool requires_grad);
+struct tt* tt_full_like(struct tshape* s, float fill_value, bool requires_grad);
+struct tt* tt_scaled_uniform(struct tshape* s, float min, float max, bool requires_grad);
+void tt_to_zeros(struct tt* t);
+bool tt_same_shape(struct tt* a, struct tt* b);
+void tt_copy_buffer(struct tt* a, struct tt* b);
+void tt_print(struct tt* t);
+void tt_destroy(struct tt* t);
 
 //elementwise ops
-struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
-struct teensy_tensor* teensy_tensor_neg(struct teensy_tensor* a, bool requires_grad);
-struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad);
-struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* t, bool requires_grad);
+struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad);
+struct tt* tt_neg(struct tt* a, bool requires_grad);
+struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad);
+struct tt* tt_relu(struct tt* t, bool requires_grad);
 //reduce ops
-struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad);
+struct tt* tt_sum(struct tt* a, bool requires_grad);
 //backprop
-void teensy_backwards(struct teensy_tensor* current);
+void tbackwards(struct tt* current);
 
 //could have a void* with other params for different optimizers.
-struct teensy_optimizer {
-    struct teensy_tensor** params;
+struct toptimizer {
+    struct tt** params;
     uint64_t size;
     float learning_rate;
     void (*step)();
 };
 
-void teensy_sgd(struct teensy_optimizer* optim);
-struct teensy_optimizer* teensy_optimizer_create(struct teensy_tensor** params, uint64_t size, float lr, void (*step)(struct teensy_optimizer*));
+void tsgd(struct toptimizer* optim);
+struct toptimizer* toptimizer_create(struct tt** params, uint64_t size, float lr, void (*step)(struct toptimizer*));
 
 #endif

@@ -8,7 +8,7 @@
 
 #include "../include/teensygrad.h"
 
-uint64_t buflen(struct teensy_shape* s) {
+uint64_t buflen(struct tshape* s) {
     uint64_t size = 1;
     for (uint32_t i = 0; i < s->size; i++) {
         size *= s->dims[i];
@@ -16,20 +16,20 @@ uint64_t buflen(struct teensy_shape* s) {
     return size;
 }
 
-struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_grad) {
+struct tt* tt_zeros(struct tshape* s, bool requires_grad) {
     uint64_t size = buflen(s);
     float* buffer = (float*)calloc(size, size*(uint64_t)sizeof(float));
 
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(s->dims, s->size);
+    struct tshape* tshape_copy = tshape_create(s->dims, s->size);
 
-    struct teensy_tensor* grads = NULL;
+    struct tt* grads = NULL;
     if (requires_grad) {
-        grads = teensy_tensor_zeros(s, false);
+        grads = tt_zeros(s, false);
     }
 
-    struct teensy_tensor* t = (struct teensy_tensor*)malloc(sizeof(struct teensy_tensor));
+    struct tt* t = (struct tt*)malloc(sizeof(struct tt));
 
-    t->shape = teensy_shape_copy;
+    t->shape = tshape_copy;
     t->buffer = buffer;
     t->size = size;
     t->requires_grad = requires_grad;
@@ -40,26 +40,26 @@ struct teensy_tensor* teensy_tensor_zeros(struct teensy_shape* s, bool requires_
     return t;
 }
 
-struct teensy_tensor* teensy_tensor_ones(struct teensy_shape* s, bool requires_grad) {
-    struct teensy_tensor* ones = teensy_tensor_zeros(s, requires_grad);
+struct tt* tt_ones(struct tshape* s, bool requires_grad) {
+    struct tt* ones = tt_zeros(s, requires_grad);
     for (size_t i = 0; i < ones->size; i++) {
         ones->buffer[i] = 1.0f;
     }
     return ones;
 }
 
-struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* buffer, bool requires_grad) {
-    struct teensy_tensor* ret = (struct teensy_tensor*)malloc(sizeof(struct teensy_tensor));
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(s->dims, s->size);
-    ret->shape = teensy_shape_copy;
+struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grad) {
+    struct tt* ret = (struct tt*)malloc(sizeof(struct tt));
+    struct tshape* tshape_copy = tshape_create(s->dims, s->size);
+    ret->shape = tshape_copy;
     uint64_t size = buflen(s);
 
     ret->buffer = buffer;
     ret->size = size;
 
-    struct teensy_tensor* grads = NULL;
+    struct tt* grads = NULL;
     if (requires_grad) {
-        grads = teensy_tensor_zeros(s, false);
+        grads = tt_zeros(s, false);
     }
     ret->op = NOOP;
     ret->parents = NULL;
@@ -69,27 +69,27 @@ struct teensy_tensor* teensy_tensor_from_buffer(struct teensy_shape* s, float* b
     return ret;
 }
 
-struct teensy_tensor* teensy_tensor_full_like(struct teensy_shape* s, float fill_value, bool requires_grad) {
-    struct teensy_tensor* t = teensy_tensor_zeros(s, requires_grad);
+struct tt* tt_full_like(struct tshape* s, float fill_value, bool requires_grad) {
+    struct tt* t = tt_zeros(s, requires_grad);
     for (uint64_t i = 0; i < t->size; i++) {
         t->buffer[i] = fill_value;
     }
     return t;
 }
 
-struct teensy_tensor* teensy_tensor_scaled_uniform(struct teensy_shape* s, float min, float max, bool requires_grad) {
-    struct teensy_tensor* t = teensy_tensor_zeros(s, requires_grad);
+struct tt* tt_scaled_uniform(struct tshape* s, float min, float max, bool requires_grad) {
+    struct tt* t = tt_zeros(s, requires_grad);
     for (uint64_t i = 0; i < t->size; i++) {
         t->buffer[i] = (max-min)/(float)t->size*i+min;//-fabs(min);
     }
     return t;
 }
 
-void teensy_tensor_to_zeros(struct teensy_tensor* t) {
+void tt_to_zeros(struct tt* t) {
     memset(t->buffer, 0, t->size);
 }
 
-bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b) {
+bool tt_same_shape(struct tt* a, struct tt* b) {
     if (a->shape->size != b->shape->size) {
         return false;
     }
@@ -101,7 +101,7 @@ bool teensy_tensor_same_shape(struct teensy_tensor* a, struct teensy_tensor* b) 
     return true;
 }
 
-void teensy_tensor_print(struct teensy_tensor* t) {
+void tt_print(struct tt* t) {
     if (t == NULL) {
         printf("tensor: (null)\n");
         return;
@@ -113,50 +113,50 @@ void teensy_tensor_print(struct teensy_tensor* t) {
     printf("]\n");
 }
 
-void teensy_tensor_copy_buffer(struct teensy_tensor* a, struct teensy_tensor* b) {
-    assert(teensy_tensor_same_shape(a, b) && "Tensors are not the same shape.");
+void tt_copy_buffer(struct tt* a, struct tt* b) {
+    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
     for (uint64_t i = 0; i < a->size; i++) {
         a->buffer[i] = b->buffer[i];
     }
 }
 
-void teensy_tensor_destroy(struct teensy_tensor* t) {
-    teensy_shape_destroy(t->shape);
+void tt_destroy(struct tt* t) {
+    tshape_destroy(t->shape);
     free(t->buffer);
     free(t->parents);
     if (t->requires_grad) {
-        teensy_tensor_destroy(t->grads);
+        tt_destroy(t->grads);
     }
     free(t);
 }
 
-void _add_backwards(struct teensy_tensor* self) {
+void _add_backwards(struct tt* self) {
     if (self->parents[0]->requires_grad) {
-        struct teensy_tensor* grads_0 = teensy_tensor_add(self->grads, self->parents[0]->grads, false);
-        teensy_tensor_destroy(self->parents[0]->grads);
+        struct tt* grads_0 = tt_add(self->grads, self->parents[0]->grads, false);
+        tt_destroy(self->parents[0]->grads);
         self->parents[0]->grads = grads_0;
     }
 
     if (self->parents[1]->requires_grad) {
-        struct teensy_tensor* grads_1 = teensy_tensor_add(self->grads, self->parents[1]->grads, false);
-        teensy_tensor_destroy(self->parents[1]->grads);
+        struct tt* grads_1 = tt_add(self->grads, self->parents[1]->grads, false);
+        tt_destroy(self->parents[1]->grads);
         self->parents[1]->grads = grads_1;
     }
 }
 
-struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad) {
-    assert(teensy_tensor_same_shape(a, b) && "Tensors are not the same shape.");
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(a->shape->dims, a->shape->size);
+struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
+    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
+    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
 
-    struct teensy_tensor** parents = NULL;
+    struct tt** parents = NULL;
     //irrelevant if not requires_grad
     if (requires_grad) {
-        parents = (struct teensy_tensor**)malloc(op_radix(ADD)*sizeof(struct teensy_tensor*));
+        parents = (struct tt**)malloc(top_radix(ADD)*sizeof(struct tt*));
         parents[0] = a;
         parents[1] = b;
     }
 
-    struct teensy_tensor* t = teensy_tensor_zeros(teensy_shape_copy, requires_grad);
+    struct tt* t = tt_zeros(tshape_copy, requires_grad);
     t->parents = parents;
     t->op = ADD;
     t->_backwards = &_add_backwards;
@@ -167,29 +167,29 @@ struct teensy_tensor* teensy_tensor_add(struct teensy_tensor* a, struct teensy_t
     return t;
 }
 
-void _neg_backwards(struct teensy_tensor* self) {
+void _neg_backwards(struct tt* self) {
     if (!self->parents[0]->requires_grad) {
         return;
     }
-    struct teensy_tensor* grads = teensy_tensor_full_like(self->shape, -1.0f, false);
-    struct teensy_tensor* mul_grads = teensy_tensor_mul(grads, self->grads, false);
-    struct teensy_tensor* acc_grads = teensy_tensor_add(mul_grads, self->parents[0]->grads, false);
-    teensy_tensor_destroy(self->parents[0]->grads);
-    teensy_tensor_destroy(grads);
-    teensy_tensor_destroy(mul_grads);
+    struct tt* grads = tt_full_like(self->shape, -1.0f, false);
+    struct tt* mul_grads = tt_mul(grads, self->grads, false);
+    struct tt* acc_grads = tt_add(mul_grads, self->parents[0]->grads, false);
+    tt_destroy(self->parents[0]->grads);
+    tt_destroy(grads);
+    tt_destroy(mul_grads);
     self->parents[0]->grads = acc_grads;
 }
 
-struct teensy_tensor* teensy_tensor_neg(struct teensy_tensor* a, bool requires_grad) {
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(a->shape->dims, a->shape->size);
+struct tt* tt_neg(struct tt* a, bool requires_grad) {
+    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
 
-    struct teensy_tensor** parents = NULL;
+    struct tt** parents = NULL;
     if (requires_grad) {
-        parents = (struct teensy_tensor**)malloc(op_radix(NEG)*sizeof(struct teensy_tensor*));
+        parents = (struct tt**)malloc(top_radix(NEG)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct teensy_tensor* t = teensy_tensor_zeros(teensy_shape_copy, requires_grad);
+    struct tt* t = tt_zeros(tshape_copy, requires_grad);
     t->parents = parents;
     t->op = NEG;
     t->_backwards = &_neg_backwards;
@@ -200,37 +200,37 @@ struct teensy_tensor* teensy_tensor_neg(struct teensy_tensor* a, bool requires_g
     return t;
 }
 
-void _mul_backwards(struct teensy_tensor* self) {
+void _mul_backwards(struct tt* self) {
     if (self->parents[0]->requires_grad) {
-        struct teensy_tensor* grads_0 = teensy_tensor_mul(self->grads, self->parents[1], false);
-        struct teensy_tensor* acc_grads_0 = teensy_tensor_add(grads_0, self->parents[0]->grads, false);
-        teensy_tensor_destroy(self->parents[0]->grads);
-        teensy_tensor_destroy(grads_0);
+        struct tt* grads_0 = tt_mul(self->grads, self->parents[1], false);
+        struct tt* acc_grads_0 = tt_add(grads_0, self->parents[0]->grads, false);
+        tt_destroy(self->parents[0]->grads);
+        tt_destroy(grads_0);
         self->parents[0]->grads = acc_grads_0;
     }
 
     if (self->parents[1]->requires_grad) {
-        struct teensy_tensor* grads_1 = teensy_tensor_mul(self->grads, self->parents[0], false);
-        struct teensy_tensor* acc_grads_1 = teensy_tensor_add(grads_1, self->parents[1]->grads, false);
-        teensy_tensor_destroy(self->parents[1]->grads);
-        teensy_tensor_destroy(grads_1);
+        struct tt* grads_1 = tt_mul(self->grads, self->parents[0], false);
+        struct tt* acc_grads_1 = tt_add(grads_1, self->parents[1]->grads, false);
+        tt_destroy(self->parents[1]->grads);
+        tt_destroy(grads_1);
         self->parents[1]->grads = acc_grads_1;
     }
 }
 
 
-struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_tensor* b, bool requires_grad) {
-    assert(teensy_tensor_same_shape(a, b) && "Tensors are not the same shape.");
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(a->shape->dims, a->shape->size);
+struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad) {
+    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
+    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
 
-    struct teensy_tensor** parents = NULL;
+    struct tt** parents = NULL;
     if (requires_grad) {
-        parents = (struct teensy_tensor**)malloc(op_radix(MUL)*sizeof(struct teensy_tensor*));
+        parents = (struct tt**)malloc(top_radix(MUL)*sizeof(struct tt*));
         parents[0] = a;
         parents[1] = b;
     }
 
-    struct teensy_tensor* t = teensy_tensor_zeros(teensy_shape_copy, requires_grad);
+    struct tt* t = tt_zeros(tshape_copy, requires_grad);
     t->parents = parents;
     t->op = MUL;
     t->_backwards = &_mul_backwards;
@@ -242,35 +242,35 @@ struct teensy_tensor* teensy_tensor_mul(struct teensy_tensor* a, struct teensy_t
     return t;
 }
 
-void _relu_backwards(struct teensy_tensor* self) {
+void _relu_backwards(struct tt* self) {
     if (!self->parents[0]->requires_grad) {
         return;
     }
 
-    struct teensy_tensor* grads = teensy_tensor_zeros(self->shape, false);
+    struct tt* grads = tt_zeros(self->shape, false);
     for (size_t i = 0; i < self->parents[0]->size; i++) {
         if (grads->buffer[i] < self->parents[0]->buffer[i]) {
             grads->buffer[i] = 1;
         }
     }
     //TODO:refactor this into a function
-    struct teensy_tensor* mul_grads = teensy_tensor_mul(self->grads, grads, false);
-    struct teensy_tensor* acc_grads = teensy_tensor_add(self->parents[0]->grads, mul_grads, false);
-    teensy_tensor_destroy(grads);
-    teensy_tensor_destroy(self->parents[0]->grads);
-    teensy_tensor_destroy(mul_grads);
+    struct tt* mul_grads = tt_mul(self->grads, grads, false);
+    struct tt* acc_grads = tt_add(self->parents[0]->grads, mul_grads, false);
+    tt_destroy(grads);
+    tt_destroy(self->parents[0]->grads);
+    tt_destroy(mul_grads);
     self->parents[0]->grads = acc_grads;
 }
 
-struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* a, bool requires_grad) {
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create(a->shape->dims, a->shape->size);
-    struct teensy_tensor**  parents = NULL;
+struct tt* tt_relu(struct tt* a, bool requires_grad) {
+    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
+    struct tt**  parents = NULL;
     if (requires_grad) {
-        parents = (struct teensy_tensor**)malloc(op_radix(RELU)*sizeof(struct teensy_tensor*));
+        parents = (struct tt**)malloc(top_radix(RELU)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct teensy_tensor* t = teensy_tensor_zeros(teensy_shape_copy, requires_grad);
+    struct tt* t = tt_zeros(tshape_copy, requires_grad);
     t->parents = parents;
     t->op = RELU;
     t->_backwards = &_relu_backwards;
@@ -282,32 +282,32 @@ struct teensy_tensor* teensy_tensor_relu(struct teensy_tensor* a, bool requires_
     return t;
 }
 
-void _sum_backwards(struct teensy_tensor* self) {
+void _sum_backwards(struct tt* self) {
     if (!self->parents[0]->requires_grad) {
         return;
     }
-    struct teensy_tensor* grads = teensy_tensor_ones(self->parents[0]->shape, false);
+    struct tt* grads = tt_ones(self->parents[0]->shape, false);
     //TODO:Expand
-    struct teensy_tensor* expanded_grads = teensy_tensor_full_like(grads->shape, self->grads->buffer[0], false);
-    struct teensy_tensor* mul_grads = teensy_tensor_mul(expanded_grads, grads, false);
-    struct teensy_tensor* acc_grads = teensy_tensor_add(self->parents[0]->grads, mul_grads, false);
+    struct tt* expanded_grads = tt_full_like(grads->shape, self->grads->buffer[0], false);
+    struct tt* mul_grads = tt_mul(expanded_grads, grads, false);
+    struct tt* acc_grads = tt_add(self->parents[0]->grads, mul_grads, false);
 
-    teensy_tensor_destroy(grads);
-    teensy_tensor_destroy(mul_grads);
-    teensy_tensor_destroy(self->parents[0]->grads);
+    tt_destroy(grads);
+    tt_destroy(mul_grads);
+    tt_destroy(self->parents[0]->grads);
 
     self->parents[0]->grads = acc_grads;
 }
 
-struct teensy_tensor* teensy_tensor_sum(struct teensy_tensor* a, bool requires_grad) {
-    struct teensy_shape* teensy_shape_copy = teensy_shape_create_1d(1);
-    struct teensy_tensor** parents = NULL;
+struct tt* tt_sum(struct tt* a, bool requires_grad) {
+    struct tshape* tshape_copy = tshape_create_1d(1);
+    struct tt** parents = NULL;
     if (requires_grad) {
-        parents = (struct teensy_tensor**)malloc(op_radix(SUM_REDUCE)*sizeof(struct teensy_tensor*));
+        parents = (struct tt**)malloc(top_radix(SUM_REDUCE)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct teensy_tensor* t = teensy_tensor_zeros(teensy_shape_copy, requires_grad);
+    struct tt* t = tt_zeros(tshape_copy, requires_grad);
     t->parents = parents;
     t->op = SUM_REDUCE;
     t->_backwards = &_sum_backwards;

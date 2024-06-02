@@ -1,27 +1,27 @@
 #include "assert.h"
 #include "../include/teensygrad.h"
 
-void teensy_sgd(struct teensy_optimizer* optim) {
+void teensy_sgd(struct toptimizer* optim) {
     for (uint64_t i = 0; i < optim->size; i++) {
-        struct teensy_tensor* t = optim->params[i];
+        struct tt* t = optim->params[i];
 
-        struct teensy_tensor* lrs = teensy_tensor_full_like(t->shape, -optim->learning_rate, false);
-        struct teensy_tensor* updated_grads = teensy_tensor_mul(lrs, t->grads, false);
+        struct tt* lrs = tt_full_like(t->shape, -optim->learning_rate, false);
+        struct tt* updated_grads = tt_mul(lrs, t->grads, false);
 
-        struct teensy_tensor* updated_params = teensy_tensor_add(updated_grads, t, false);
+        struct tt* updated_params = tt_add(updated_grads, t, false);
 
-        teensy_tensor_copy_buffer(t, updated_params);
+        tt_copy_buffer(t, updated_params);
 
-        teensy_tensor_destroy(lrs);
-        teensy_tensor_destroy(updated_grads);
-        teensy_tensor_destroy(updated_params);
+        tt_destroy(lrs);
+        tt_destroy(updated_grads);
+        tt_destroy(updated_params);
     }
 }
 
-struct teensy_optimizer* teensy_optimizer_create(struct teensy_tensor** params, uint64_t size, float lr, void (*step)(struct teensy_optimizer*)) {
+struct toptimizer* toptimizer_create(struct tt** params, uint64_t size, float lr, void (*step)(struct toptimizer*)) {
     assert(lr >= 0 && lr <= 1 && "Learning rate should be between 0 and 1.");
     assert(size > 0 && "Must have 1 or more param.");
-    struct teensy_optimizer* optim = (struct teensy_optimizer*)malloc(sizeof (struct teensy_optimizer));
+    struct toptimizer* optim = (struct toptimizer*)malloc(sizeof (struct toptimizer));
     optim->params = params;
     optim->learning_rate = lr;
     optim->step = step;

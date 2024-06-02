@@ -1,7 +1,7 @@
 #include "assert.h"
 #include "../include/teensygrad.h"
 
-size_t op_radix(enum teensy_op op) {
+size_t top_radix(enum top op) {
     switch (op) {
         case NOOP:
             return 0;
