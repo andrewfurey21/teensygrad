@@ -17,6 +17,18 @@ struct tshape* tshape_create(uint32_t* dims, uint32_t size) {
     return ret;
 }
 
+bool tshape_compare(struct tt* a, struct tt* b) {
+    if (a->shape->size != b->shape->size) {
+        return false;
+    }
+    for (uint32_t i = 0; i < a->shape->size; i++) {
+        if (a->shape->dims[i] != b->shape->dims[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 struct tshape* tshape_create_1d(uint32_t dim) {
     uint32_t* dims = (uint32_t*)malloc(sizeof(uint32_t));
     dims[0] = dim;
@@ -34,7 +46,6 @@ void tshape_destroy(struct tshape* s) {
     free(s->dims);
     free(s);
 }
-
 
 void tshape_print(struct tshape* s) {
     assert(s->size <= MAX_DIMS && "Too many dimensions in tshape.");

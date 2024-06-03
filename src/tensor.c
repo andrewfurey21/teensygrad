@@ -89,18 +89,6 @@ void tt_to_zeros(struct tt* t) {
     memset(t->buffer, 0, t->size);
 }
 
-bool tt_same_shape(struct tt* a, struct tt* b) {
-    if (a->shape->size != b->shape->size) {
-        return false;
-    }
-    for (uint32_t i = 0; i < a->shape->size; i++) {
-        if (a->shape->dims[i] != b->shape->dims[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void tt_print(struct tt* t) {
     if (t == NULL) {
         printf("tensor: (null)\n");
@@ -114,7 +102,7 @@ void tt_print(struct tt* t) {
 }
 
 void tt_copy_buffer(struct tt* a, struct tt* b) {
-    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
+    assert(tshape_compare(a, b) && "Tensors are not the same shape.");
     for (uint64_t i = 0; i < a->size; i++) {
         a->buffer[i] = b->buffer[i];
     }
@@ -145,7 +133,7 @@ void _add_backwards(struct tt* self) {
 }
 
 struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
-    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
+    assert(tshape_compare(a, b) && "Tensors are not the same shape.");
     struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
 
     struct tt** parents = NULL;
@@ -220,7 +208,7 @@ void _mul_backwards(struct tt* self) {
 
 
 struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad) {
-    assert(tt_same_shape(a, b) && "Tensors are not the same shape.");
+    assert(tshape_compare(a, b) && "Tensors are not the same shape.");
     struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
 
     struct tt** parents = NULL;

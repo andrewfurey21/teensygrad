@@ -21,13 +21,6 @@ struct tshape {
     uint32_t size;
 };
 
-struct tshape* tshape_create(uint32_t* dims, uint32_t size);
-struct tshape* tshape_create_1d(uint32_t dim);
-struct tshape* tshape_create_2d(uint32_t dim1, uint32_t dim2);
-void tshape_print(struct tshape* s);
-void tshape_destroy(struct tshape* s);
-
-
 struct tt {
     struct tshape* shape;
     float* buffer;
@@ -41,13 +34,21 @@ struct tt {
     struct tt* grads;
 };
 
+
+bool tshape_compare(struct tt* a, struct tt* b);
+struct tshape* tshape_create(uint32_t* dims, uint32_t size);
+struct tshape* tshape_create_1d(uint32_t dim);
+struct tshape* tshape_create_2d(uint32_t dim1, uint32_t dim2);
+void tshape_print(struct tshape* s);
+void tshape_destroy(struct tshape* s);
+
+
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
 struct tt* tt_zeros(struct tshape* s, bool requires_grad);
 struct tt* tt_ones(struct tshape* s, bool requires_grad);
 struct tt* tt_full_like(struct tshape* s, float fill_value, bool requires_grad);
 struct tt* tt_scaled_uniform(struct tshape* s, float min, float max, bool requires_grad);
 void tt_to_zeros(struct tt* t);
-bool tt_same_shape(struct tt* a, struct tt* b);
 void tt_copy_buffer(struct tt* a, struct tt* b);
 void tt_print(struct tt* t);
 void tt_destroy(struct tt* t);
