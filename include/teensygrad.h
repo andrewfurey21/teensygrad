@@ -59,8 +59,16 @@ struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad);
 struct tt* tt_relu(struct tt* t, bool requires_grad);
 //reduce ops
 struct tt* tt_sum(struct tt* a, bool requires_grad);
+
+//computational graph
+struct tgraph {
+    struct tt** nodes;
+    size_t size;
+    bool training;
+};
+struct tgraph* tgraph_build(struct tt* x);
 //backprop
-void tbackwards(struct tt* current);
+void tbackwards(struct tgraph* net);
 
 //could have a void* with other params for different optimizers.
 struct toptimizer {

@@ -25,7 +25,7 @@ int main(void) {
     struct tt* weight = tt_from_buffer(s, buffer, true);
     struct tt* bias = tt_from_buffer(s_bias, buffer3, true);
 
-    struct tt* wi = tt_mul(weight, input, false);
+    struct tt* wi = tt_mul(weight, input, true);
     struct tt* dot_wi = tt_sum(wi, true);
     struct tt* out = tt_add(dot_wi, bias, true);
 
@@ -69,8 +69,10 @@ int main(void) {
     tt_print(neg_act->grads);
 
     printf("-------------------------------\n");
-    printf("Performing backprop:\n");
-    tbackwards(neg_act);
+    printf("Building computational graph and performing backprop:\n");
+
+    struct tgraph* cg = tgraph_build(neg_act);
+    tbackwards(cg);
 
     printf("-------------------------------\n");
     printf("Grads after:\n");
