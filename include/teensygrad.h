@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stdarg.h"
 #include "stdbool.h"
 #include "stdlib.h"
 
@@ -36,9 +37,8 @@ struct tt {
 
 
 bool tshape_compare(struct tt* a, struct tt* b);
-struct tshape* tshape_create(uint32_t* dims, uint32_t size);
-struct tshape* tshape_create_1d(uint32_t dim);
-struct tshape* tshape_create_2d(uint32_t dim1, uint32_t dim2);
+struct tshape* tshape_create(uint32_t size, ...);
+struct tshape* tshape_copy(struct tshape* other);
 void tshape_print(struct tshape* s);
 void tshape_destroy(struct tshape* s);
 

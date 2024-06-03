@@ -4,12 +4,13 @@
 
 int main(void) {
     int buf_size = 2;
-    struct tshape* s100 = tshape_create_1d(100);
+    struct tshape* s100 = tshape_create(1, 100);
+    tshape_print(s100);
     struct tt* uni = tt_scaled_uniform(s100, -8, 17, false);
     tt_print(uni);
 
-    struct tshape* s = tshape_create_1d(buf_size);
-    struct tshape* s_bias = tshape_create_1d(1);
+    struct tshape* s = tshape_create(1, buf_size);
+    struct tshape* s_bias = tshape_create(1, 1);
 
     float* buffer = (float*)malloc(buf_size*sizeof(float));
     float* buffer2 = (float*)malloc(buf_size*sizeof(float));

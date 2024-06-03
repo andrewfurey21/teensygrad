@@ -1,6 +1,6 @@
 # TODO: more env vars, make install
 
-DEBUG=0
+DEBUG=1
 
 ALIB=libteensygrad.a
 OBJDIR=./obj/

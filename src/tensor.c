@@ -20,7 +20,7 @@ struct tt* tt_zeros(struct tshape* s, bool requires_grad) {
     uint64_t size = buflen(s);
     float* buffer = (float*)calloc(size, size*(uint64_t)sizeof(float));
 
-    struct tshape* tshape_copy = tshape_create(s->dims, s->size);
+    struct tshape* copy = tshape_copy(s);
 
     struct tt* grads = NULL;
     if (requires_grad) {
@@ -29,7 +29,7 @@ struct tt* tt_zeros(struct tshape* s, bool requires_grad) {
 
     struct tt* t = (struct tt*)malloc(sizeof(struct tt));
 
-    t->shape = tshape_copy;
+    t->shape = copy;
     t->buffer = buffer;
     t->size = size;
     t->requires_grad = requires_grad;
@@ -50,8 +50,8 @@ struct tt* tt_ones(struct tshape* s, bool requires_grad) {
 
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grad) {
     struct tt* ret = (struct tt*)malloc(sizeof(struct tt));
-    struct tshape* tshape_copy = tshape_create(s->dims, s->size);
-    ret->shape = tshape_copy;
+    struct tshape* copy = tshape_copy(s);
+    ret->shape = copy;
     uint64_t size = buflen(s);
 
     ret->buffer = buffer;
@@ -134,7 +134,7 @@ void _add_backwards(struct tt* self) {
 
 struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
     assert(tshape_compare(a, b) && "Tensors are not the same shape.");
-    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
+    struct tshape* copy = tshape_copy(a->shape);
 
     struct tt** parents = NULL;
     //irrelevant if not requires_grad
@@ -144,7 +144,7 @@ struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
         parents[1] = b;
     }
 
-    struct tt* t = tt_zeros(tshape_copy, requires_grad);
+    struct tt* t = tt_zeros(copy, requires_grad);
     t->parents = parents;
     t->op = ADD;
     t->_backwards = &_add_backwards;
@@ -169,7 +169,7 @@ void _neg_backwards(struct tt* self) {
 }
 
 struct tt* tt_neg(struct tt* a, bool requires_grad) {
-    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
+    struct tshape* copy = tshape_copy(a->shape);
 
     struct tt** parents = NULL;
     if (requires_grad) {
@@ -177,7 +177,7 @@ struct tt* tt_neg(struct tt* a, bool requires_grad) {
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(tshape_copy, requires_grad);
+    struct tt* t = tt_zeros(copy, requires_grad);
     t->parents = parents;
     t->op = NEG;
     t->_backwards = &_neg_backwards;
@@ -209,7 +209,7 @@ void _mul_backwards(struct tt* self) {
 
 struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad) {
     assert(tshape_compare(a, b) && "Tensors are not the same shape.");
-    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
+    struct tshape* copy = tshape_copy(a->shape);
 
     struct tt** parents = NULL;
     if (requires_grad) {
@@ -218,7 +218,7 @@ struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad) {
         parents[1] = b;
     }
 
-    struct tt* t = tt_zeros(tshape_copy, requires_grad);
+    struct tt* t = tt_zeros(copy, requires_grad);
     t->parents = parents;
     t->op = MUL;
     t->_backwards = &_mul_backwards;
@@ -251,14 +251,14 @@ void _relu_backwards(struct tt* self) {
 }
 
 struct tt* tt_relu(struct tt* a, bool requires_grad) {
-    struct tshape* tshape_copy = tshape_create(a->shape->dims, a->shape->size);
+    struct tshape* copy = tshape_copy(a->shape);
     struct tt**  parents = NULL;
     if (requires_grad) {
         parents = (struct tt**)malloc(top_radix(RELU)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(tshape_copy, requires_grad);
+    struct tt* t = tt_zeros(copy, requires_grad);
     t->parents = parents;
     t->op = RELU;
     t->_backwards = &_relu_backwards;
@@ -288,14 +288,14 @@ void _sum_backwards(struct tt* self) {
 }
 
 struct tt* tt_sum(struct tt* a, bool requires_grad) {
-    struct tshape* tshape_copy = tshape_create_1d(1);
+    struct tshape* shape = tshape_create(1, 1);
     struct tt** parents = NULL;
     if (requires_grad) {
         parents = (struct tt**)malloc(top_radix(SUM_REDUCE)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(tshape_copy, requires_grad);
+    struct tt* t = tt_zeros(shape, requires_grad);
     t->parents = parents;
     t->op = SUM_REDUCE;
     t->_backwards = &_sum_backwards;
