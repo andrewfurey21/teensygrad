@@ -68,6 +68,7 @@ struct tgraph {
     bool training;
 };
 struct tgraph* tgraph_build(struct tt* x);
+void tgraph_zeroed(struct tgraph* net);
 //backprop
 void tbackwards(struct tgraph* net);
 

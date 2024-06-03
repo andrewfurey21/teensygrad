@@ -45,6 +45,17 @@ struct tgraph* tgraph_build(struct tt* x) {
     return network;
 }
 
+// zero out gradients in the graph
+void tgraph_zeroed(struct tgraph* net) {
+    if (!net->training) return;
+    for (uint32_t i = 0; i < net->size; i++) {
+        struct tt* t = net->nodes[i];
+        if (t->requires_grad) {
+            tt_to_zeros(t->grads);
+        }
+    }
+}
+
 //iteratively call backwards on nodes, which calculates gradients on parent nodes.
 void tbackwards(struct tgraph* net) {
     assert(net->training && "Training is set to false!");

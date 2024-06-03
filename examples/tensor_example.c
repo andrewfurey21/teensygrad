@@ -73,6 +73,7 @@ int main(void) {
     printf("Building computational graph and performing backprop:\n");
 
     struct tgraph* cg = tgraph_build(neg_act);
+    tgraph_zeroed(cg);
     tbackwards(cg);
 
     printf("-------------------------------\n");
