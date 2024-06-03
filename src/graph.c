@@ -27,7 +27,7 @@ bool already_visited(struct tgraph* net, struct tt* t) {
 void topo_sort(struct tgraph* net, struct tt* current) {
     for (size_t i = 0; i < top_radix(current->op); i++) {
         struct tt* parent = current->parents[i];
-        if (!already_visited(net, parent) && parent->requires_grad) {
+        if (!already_visited(net, parent) && parent->requires_grad) {//all tensors in graph require grads
             topo_sort(net, parent);
         }
     }
@@ -50,9 +50,7 @@ void tgraph_zeroed(struct tgraph* net) {
     if (!net->training) return;
     for (uint32_t i = 0; i < net->size; i++) {
         struct tt* t = net->nodes[i];
-        if (t->requires_grad) {
-            tt_to_zeros(t->grads);
-        }
+        tt_to_zeros(t->grads);//all tensors in graph require grads
     }
 }
 
