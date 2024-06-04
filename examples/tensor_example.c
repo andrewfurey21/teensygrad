@@ -8,6 +8,8 @@ int main(void) {
     tshape_print(s100);
     struct tt* uni = tt_scaled_uniform(s100, -8, 17, false);
     tt_print(uni);
+    tt_to_zeros(uni);
+    tt_print(uni);
 
     struct tshape* s = tshape_create(1, buf_size);
     struct tshape* s_bias = tshape_create(1, 1);
@@ -94,4 +96,8 @@ int main(void) {
     tt_print(act->grads);
     printf("-relu(sum(inputs * weights) + bias):");
     tt_print(neg_act->grads);
+
+    tt_to_zeros(weight);
+    printf("zeroed out weights: ");
+    tt_print(weight);
 }

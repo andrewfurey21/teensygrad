@@ -86,7 +86,7 @@ struct tt* tt_scaled_uniform(struct tshape* s, float min, float max, bool requir
 }
 
 void tt_to_zeros(struct tt* t) {
-    memset(t->buffer, 0, t->size);
+    memset(t->buffer, 0, t->size*4);
 }
 
 void tt_print(struct tt* t) {

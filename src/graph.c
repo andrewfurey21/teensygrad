@@ -2,7 +2,6 @@
 #include "assert.h"
 #include "stdio.h"
 #include "../include/teensygrad.h"
-
 #define MAX_NODES 100
 
 
