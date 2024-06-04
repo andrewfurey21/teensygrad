@@ -44,6 +44,13 @@ struct tgraph* tgraph_build(struct tt* x) {
     return network;
 }
 
+void tgraph_free(struct tgraph* net) {
+    for (size_t i = 0; i < net->size; i++) {
+        tt_free(net->nodes[i]);
+    }
+    free(net);
+}
+
 // zero out gradients in the graph
 void tgraph_zeroed(struct tgraph* net) {
     if (!net->training) return;
@@ -62,7 +69,7 @@ void tbackwards(struct tgraph* net) {
     if (!current->requires_grad) return;
 
     struct tt* grads = tt_ones(current->shape, false);
-    tt_destroy(current->grads);
+    tt_free(current->grads);
     current->grads = grads;
 
     for (int32_t i = net->size-2; i >= 0; i--) {

@@ -6,7 +6,7 @@ int main(void) {
     int buf_size = 2;
     struct tshape* s100 = tshape_create(1, 100);
     tshape_print(s100);
-    struct tt* uni = tt_scaled_uniform(s100, -8, 17, false);
+    struct tt* uni = tt_linspace(s100, -8, 17, false);
     tt_print(uni);
     tt_to_zeros(uni);
     tt_print(uni);
@@ -100,4 +100,6 @@ int main(void) {
     tt_to_zeros(weight);
     printf("zeroed out weights: ");
     tt_print(weight);
+
+    tgraph_free(cg);
 }

@@ -46,7 +46,7 @@ bool tshape_compare(struct tt* a, struct tt* b) {
     return true;
 }
 
-void tshape_destroy(struct tshape* s) {
+void tshape_free(struct tshape* s) {
     free(s->dims);
     free(s);
 }

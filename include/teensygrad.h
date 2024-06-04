@@ -40,18 +40,18 @@ bool tshape_compare(struct tt* a, struct tt* b);
 struct tshape* tshape_create(uint32_t size, ...);
 struct tshape* tshape_copy(struct tshape* other);
 void tshape_print(struct tshape* s);
-void tshape_destroy(struct tshape* s);
+void tshape_free(struct tshape* s);
 
 
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
 struct tt* tt_zeros(struct tshape* s, bool requires_grad);
 struct tt* tt_ones(struct tshape* s, bool requires_grad);
-struct tt* tt_full_like(struct tshape* s, float fill_value, bool requires_grad);
-struct tt* tt_scaled_uniform(struct tshape* s, float min, float max, bool requires_grad);
+struct tt* tt_fill(struct tshape* s, float fill_value, bool requires_grad);
+struct tt* tt_linspace(struct tshape* s, float min, float max, bool requires_grad);
 void tt_to_zeros(struct tt* t);
 void tt_copy_buffer(struct tt* a, struct tt* b);
 void tt_print(struct tt* t);
-void tt_destroy(struct tt* t);
+void tt_free(struct tt* t);
 
 //elementwise ops
 struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad);
@@ -68,6 +68,7 @@ struct tgraph {
     bool training;
 };
 struct tgraph* tgraph_build(struct tt* x);
+void tgraph_free(struct tgraph* net);
 void tgraph_zeroed(struct tgraph* net);
 //backprop
 void tbackwards(struct tgraph* net);
