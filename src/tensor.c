@@ -85,6 +85,14 @@ struct tt* tt_linspace(struct tshape* s, float min, float max, bool requires_gra
     return t;
 }
 
+struct tt* tt_uniform(struct tshape* s, float min, float max, bool requires_grad) {
+    struct tt* t = tt_zeros(s, requires_grad);
+    for (uint64_t i = 0; i < t->size; i++) {
+        t->buffer[i] = (float)rand()/(float)RAND_MAX * (max-min) + min;
+    }
+    return t;
+}
+
 void tt_to_zeros(struct tt* t) {
     memset(t->buffer, 0, t->size*4);
 }

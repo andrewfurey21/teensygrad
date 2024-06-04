@@ -48,6 +48,7 @@ struct tt* tt_zeros(struct tshape* s, bool requires_grad);
 struct tt* tt_ones(struct tshape* s, bool requires_grad);
 struct tt* tt_fill(struct tshape* s, float fill_value, bool requires_grad);
 struct tt* tt_linspace(struct tshape* s, float min, float max, bool requires_grad);
+struct tt* tt_uniform(struct tshape* s, float min, float max, bool requires_grad);
 void tt_to_zeros(struct tt* t);
 void tt_copy_buffer(struct tt* a, struct tt* b);
 void tt_print(struct tt* t);

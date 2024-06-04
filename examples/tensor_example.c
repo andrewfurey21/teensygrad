@@ -1,12 +1,14 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "../include/teensygrad.h"
+#include <time.h>
 
 int main(void) {
+    srand(time(NULL));
     int buf_size = 2;
     struct tshape* s100 = tshape_build(1, 100);
     tshape_print(s100);
-    struct tt* uni = tt_linspace(s100, -8, 17, false);
+    struct tt* uni = tt_uniform(s100, -8, 17, false);
     tt_print(uni);
     tt_to_zeros(uni);
     tt_print(uni);
