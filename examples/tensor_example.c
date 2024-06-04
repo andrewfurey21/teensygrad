@@ -78,7 +78,7 @@ int main(void) {
 
     struct tgraph* cg = tgraph_build(neg_act);
     tgraph_zeroed(cg);
-    tbackwards(cg);
+    tgraph_backprop(cg);
     printf("Graph size: %ld\n", cg->size);
 
     printf("-------------------------------\n");

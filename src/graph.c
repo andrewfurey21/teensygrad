@@ -57,7 +57,7 @@ void tgraph_zeroed(struct tgraph* net) {
 }
 
 //iteratively call backwards on nodes, which calculates gradients on parent nodes.
-void tbackwards(struct tgraph* net) {
+void tgraph_backprop(struct tgraph* net) {
     assert(net->training && "Training is set to false!");
 
     // TODO: current->shape must be (1)

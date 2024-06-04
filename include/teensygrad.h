@@ -72,7 +72,7 @@ struct tgraph* tgraph_build(struct tt* x);
 void tgraph_free(struct tgraph* net);
 void tgraph_zeroed(struct tgraph* net);
 //backprop
-void tbackwards(struct tgraph* net);
+void tgraph_backprop(struct tgraph* net);
 
 // TODO: have a void*/varargs with other params for different optimizers (lars/adam/adamW/lamb)
 struct toptimizer {
