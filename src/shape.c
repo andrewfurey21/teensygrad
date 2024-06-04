@@ -7,7 +7,7 @@
 
 #define MAX_DIMS 4
 
-struct tshape* tshape_create(uint32_t size, ...) {
+struct tshape* tshape_build(uint32_t size, ...) {
     assert(MAX_DIMS >= size);
     va_list ap;
 

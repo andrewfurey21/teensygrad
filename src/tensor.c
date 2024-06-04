@@ -295,7 +295,7 @@ void _sum_backwards(struct tt* self) {
 }
 
 struct tt* tt_sum(struct tt* a, bool requires_grad) {
-    struct tshape* shape = tshape_create(1, 1);
+    struct tshape* shape = tshape_build(1, 1);
     struct tt** parents = NULL;
     if (requires_grad) {
         parents = (struct tt**)malloc(top_radix(SUM_REDUCE)*sizeof(struct tt*));

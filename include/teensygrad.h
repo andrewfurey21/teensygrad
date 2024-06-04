@@ -36,11 +36,11 @@ struct tt {
 };
 
 
-bool tshape_compare(struct tt* a, struct tt* b);
-struct tshape* tshape_create(uint32_t size, ...);
-struct tshape* tshape_copy(struct tshape* other);
-void tshape_print(struct tshape* s);
+struct tshape* tshape_build(uint32_t size, ...);
 void tshape_free(struct tshape* s);
+struct tshape* tshape_copy(struct tshape* other);
+bool tshape_compare(struct tt* a, struct tt* b);
+void tshape_print(struct tshape* s);
 
 
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
@@ -73,15 +73,18 @@ void tgraph_zeroed(struct tgraph* net);
 //backprop
 void tbackwards(struct tgraph* net);
 
-//could have a void* with other params for different optimizers.
+// TODO: have a void*/varargs with other params for different optimizers (lars/adam/adamW/lamb)
 struct toptimizer {
-    struct tt** params;
+    struct tgraph* net;
     uint64_t size;
     float learning_rate;
     void (*step)();
 };
 
+struct toptimizer* toptimizer_build(struct tt** params, uint64_t size, float lr, void (*step)(struct toptimizer*));
+void toptimizer_free(struct toptimizer* topt);
+
+//optimization steps
 void tsgd(struct toptimizer* optim);
-struct toptimizer* toptimizer_create(struct tt** params, uint64_t size, float lr, void (*step)(struct toptimizer*));
 
 #endif

@@ -5,14 +5,6 @@
 #define MAX_NODES 100
 
 
-struct tgraph* tgraph_create(bool training) {
-    struct tgraph* net = (struct tgraph*)malloc(sizeof(struct tgraph));
-    net->nodes = (struct tt**)malloc(sizeof(struct tt*)*MAX_NODES);
-    net->size = 0;
-    net->training = training;
-    return net;
-}
-
 bool already_visited(struct tgraph* net, struct tt* t) {
     for (size_t i = 0; i < net->size; i++) {
         if (net->nodes[i] == t) {
@@ -38,10 +30,14 @@ void topo_sort(struct tgraph* net, struct tt* current) {
 struct tgraph* tgraph_build(struct tt* x) {
     assert(x->requires_grad && "Will not build graph on something that doesn't require gradients");
 
-    struct tgraph* network = tgraph_create(true);
-    topo_sort(network, x);
+    struct tgraph* net = (struct tgraph*)malloc(sizeof(struct tgraph));
+    net->nodes = (struct tt**)malloc(sizeof(struct tt*)*MAX_NODES);
+    net->size = 0;
+    net->training = true;
 
-    return network;
+    topo_sort(net, x);
+
+    return net;
 }
 
 void tgraph_free(struct tgraph* net) {
