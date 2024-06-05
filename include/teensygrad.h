@@ -17,6 +17,7 @@ enum top {
 };
 
 size_t top_radix(enum top);
+void print_op_string(enum top op);
 
 struct tshape {
     int32_t* dims;
@@ -77,7 +78,7 @@ struct tgraph* tgraph_build(struct tt* x);
 void tgraph_free(struct tgraph* net);
 void tgraph_zeroed(struct tgraph* net);
 //backprop
-void tgraph_backprop(struct tgraph* net);
+void tgraph_backprop(struct tgraph* net);//TODO: ONLY UPDATE WEIGHTS!!
 
 struct toptimizer {
     struct tgraph* net;

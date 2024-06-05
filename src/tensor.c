@@ -118,8 +118,10 @@ void tt_print(struct tt* t) {
         return;
     }
     tshape_print(t->shape);
-    printf("  op: ");
-    print_op_string(t->op);
+    if (t->requires_grad) {
+        printf("  op: ");
+        print_op_string(t->op);
+    }
     printf("  values: [ ");
     for (int i = 0; i < t->size; i++) {
         printf("%f, ", t->buffer[i]);
