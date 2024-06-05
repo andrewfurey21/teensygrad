@@ -13,7 +13,7 @@ struct tshape* tshape_build(uint32_t size, ...) {
 
     struct tshape* ret = (struct tshape*)malloc(sizeof(struct tshape));
     ret->size = size;
-    ret->dims = (uint32_t*)malloc(size * sizeof(uint32_t));
+    ret->dims = (int32_t*)malloc(size * sizeof(int32_t));
     va_start(ap, size);
 
     for (uint32_t i = 0; i < size; i++) {
@@ -27,7 +27,7 @@ struct tshape* tshape_build(uint32_t size, ...) {
 struct tshape* tshape_copy(struct tshape* other) {
     struct tshape* copy = (struct tshape*)malloc(sizeof(struct tshape));
     copy->size = other->size;
-    copy->dims = (uint32_t*)malloc(sizeof(uint32_t) * copy->size);
+    copy->dims = (int32_t*)malloc(sizeof(int32_t) * copy->size);
     for (uint32_t i = 0; i < copy->size; i++) {
         copy->dims[i] = other->dims[i];
     }

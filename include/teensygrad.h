@@ -11,6 +11,7 @@ enum top {
     RELU,
     NEG,
     SUM_REDUCE,
+    RESHAPE,
     ADD,
     MUL
 };
@@ -18,7 +19,7 @@ enum top {
 size_t top_radix(enum top);
 
 struct tshape {
-    uint32_t* dims;
+    int32_t* dims;
     uint32_t size;
 };
 
@@ -49,8 +50,9 @@ struct tt* tt_ones(struct tshape* s, bool requires_grad);
 struct tt* tt_fill(struct tshape* s, float fill_value, bool requires_grad);
 struct tt* tt_linspace(struct tshape* s, float min, float max, bool requires_grad);
 struct tt* tt_uniform(struct tshape* s, float min, float max, bool requires_grad);
+struct tt* tt_copy(struct tt* original, bool requires_grad);
 void tt_to_zeros(struct tt* t);
-void tt_copy_buffer(struct tt* a, struct tt* b);
+void tt_copy_buffer(struct tt* dest, struct tt* src);
 void tt_print(struct tt* t);
 void tt_free(struct tt* t);
 
@@ -61,6 +63,8 @@ struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad);
 struct tt* tt_relu(struct tt* t, bool requires_grad);
 //reduce ops
 struct tt* tt_sum(struct tt* a, bool requires_grad);
+//movement ops
+struct tt* tt_reshape(struct tt* a, struct tshape* new_shape, bool requires_grad);
 
 //computational graph
 struct tgraph {
