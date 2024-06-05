@@ -78,11 +78,9 @@ void tgraph_zeroed(struct tgraph* net);
 //backprop
 void tgraph_backprop(struct tgraph* net);
 
-// TODO: have a void*/varargs with other params for different optimizers (lars/adam/adamW/lamb)
 struct toptimizer {
     struct tgraph* net;
-    uint64_t size;
-    float learning_rate;
+    float learning_rate;//should be void*, or maybe params struct for different optimizers (adam, lars, adamw, lamb, sgd, etc);
     void (*step)();
 };
 

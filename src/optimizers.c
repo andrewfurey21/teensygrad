@@ -2,7 +2,7 @@
 #include "../include/teensygrad.h"
 
 void tsgd(struct toptimizer* optim) {
-    for (uint64_t i = 0; i < optim->size; i++) {
+    for (uint64_t i = 0; i < optim->net->size; i++) {
         struct tt* t = optim->net->nodes[i];
 
         struct tt* lrs = tt_fill(t->shape, -optim->learning_rate, false);
@@ -25,9 +25,9 @@ struct toptimizer* toptimizer_create(struct tgraph* net, uint64_t size, float lr
     optim->net= net;
     optim->learning_rate = lr;
     optim->step = step;
-    optim->size = size;
     return optim;
 }
 
 void toptimizer_free(struct toptimizer* topt) {
+    free(topt);//dont free net
 }
