@@ -114,10 +114,12 @@ void tt_to_n(struct tt* t, float n) {
 void tt_print(struct tt* t) {
     printf("teensy tensor: \n  ");
     if (!t) {
-        printf("  values: (null)\n");
+        printf("values: (null)\n");
         return;
     }
     tshape_print(t->shape);
+    printf("  op: ");
+    print_op_string(t->op);
     printf("  values: [ ");
     for (int i = 0; i < t->size; i++) {
         printf("%f, ", t->buffer[i]);
