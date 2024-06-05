@@ -50,6 +50,7 @@ struct tt* tt_ones(struct tshape* s, bool requires_grad);
 struct tt* tt_fill(struct tshape* s, float fill_value, bool requires_grad);
 struct tt* tt_linspace(struct tshape* s, float min, float max, bool requires_grad);
 struct tt* tt_uniform(struct tshape* s, float min, float max, bool requires_grad);
+struct tt* tt_uniformint(struct tshape* s, float min, float max, bool requires_grad);
 struct tt* tt_copy(struct tt* original, bool requires_grad);
 void tt_to_zeros(struct tt* t);
 void tt_copy_buffer(struct tt* dest, struct tt* src);
@@ -80,7 +81,7 @@ void tgraph_backprop(struct tgraph* net);
 
 struct toptimizer {
     struct tgraph* net;
-    float learning_rate;//should be void*, or maybe params struct for different optimizers (adam, lars, adamw, lamb, sgd, etc);
+    float learning_rate;// TODO:make part of step function call (struct)
     void (*step)();
 };
 

@@ -93,6 +93,14 @@ struct tt* tt_uniform(struct tshape* s, float min, float max, bool requires_grad
     return t;
 }
 
+struct tt* tt_uniformint(struct tshape* s, float min, float max, bool requires_grad) {
+    struct tt* t = tt_uniform(s, min, max, requires_grad);
+    for (uint64_t i = 0; i < t->size; i++) {
+        t->buffer[i] = (float)(int)t->buffer[i];
+    }
+    return t;
+}
+
 void tt_to_zeros(struct tt* t) {
     memset(t->buffer, 0, t->size*4);
 }
