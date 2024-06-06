@@ -6,9 +6,9 @@ void tsgd(struct toptimizer* optim) {
         struct tt* t = optim->net->nodes[i];
 
         struct tt* lrs = tt_fill(t->shape, -optim->learning_rate, false);
-        struct tt* updated_grads = tt_mul(lrs, t->grads, false);
+        struct tt* updated_grads = tt_mul(lrs, t->grads);
 
-        struct tt* updated_params = tt_add(updated_grads, t, false);
+        struct tt* updated_params = tt_add(updated_grads, t);
 
         tt_copy_buffer(t, updated_params);
 

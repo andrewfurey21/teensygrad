@@ -159,24 +159,24 @@ void _neg_backwards(struct tt* self) {
         return;
     }
     struct tt* grads = tt_fill(self->shape, -1.0f, false);
-    struct tt* mul_grads = tt_mul(grads, self->grads, false);
-    struct tt* acc_grads = tt_add(mul_grads, self->parents[0]->grads, false);
+    struct tt* mul_grads = tt_mul(grads, self->grads);
+    struct tt* acc_grads = tt_add(mul_grads, self->parents[0]->grads);
     tt_free(self->parents[0]->grads);
     tt_free(grads);
     tt_free(mul_grads);
     self->parents[0]->grads = acc_grads;
 }
 
-struct tt* tt_neg(struct tt* a, bool requires_grad) {
+struct tt* tt_neg(struct tt* a) {
     struct tshape* copy = tshape_copy(a->shape);
 
     struct tt** parents = NULL;
-    if (requires_grad) {
+    if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(NEG)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(copy, requires_grad);
+    struct tt* t = tt_zeros(copy, a->requires_grad);
     t->parents = parents;
     t->op = NEG;
     t->_backwards = &_neg_backwards;
@@ -199,23 +199,23 @@ void _relu_backwards(struct tt* self) {
         }
     }
     //TODO:refactor this into a function
-    struct tt* mul_grads = tt_mul(self->grads, grads, false);
-    struct tt* acc_grads = tt_add(self->parents[0]->grads, mul_grads, false);
+    struct tt* mul_grads = tt_mul(self->grads, grads);
+    struct tt* acc_grads = tt_add(self->parents[0]->grads, mul_grads);
     tt_free(grads);
     tt_free(self->parents[0]->grads);
     tt_free(mul_grads);
     self->parents[0]->grads = acc_grads;
 }
 
-struct tt* tt_relu(struct tt* a, bool requires_grad) {
+struct tt* tt_relu(struct tt* a) {
     struct tshape* copy = tshape_copy(a->shape);
     struct tt**  parents = NULL;
-    if (requires_grad) {
+    if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(RELU)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(copy, requires_grad);
+    struct tt* t = tt_zeros(copy, a->requires_grad);
     t->parents = parents;
     t->op = RELU;
     t->_backwards = &_relu_backwards;
@@ -229,21 +229,22 @@ struct tt* tt_relu(struct tt* a, bool requires_grad) {
 // Binary ops
 void _add_backwards(struct tt* self) {
     if (self->parents[0]->requires_grad) {
-        struct tt* grads_0 = tt_add(self->grads, self->parents[0]->grads, false);
+        struct tt* grads_0 = tt_add(self->grads, self->parents[0]->grads);
         tt_free(self->parents[0]->grads);
         self->parents[0]->grads = grads_0;
     }
 
     if (self->parents[1]->requires_grad) {
-       struct tt* grads_1 = tt_add(self->grads, self->parents[1]->grads, false);
+       struct tt* grads_1 = tt_add(self->grads, self->parents[1]->grads);
         tt_free(self->parents[1]->grads);
         self->parents[1]->grads = grads_1;
     }
 }
 
-struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
+struct tt* tt_add(struct tt* a, struct tt* b) {
     assert(tshape_equal(a->shape, b->shape) && "Tensors are not the same shape.");
     struct tshape* copy = tshape_copy(a->shape);
+    bool requires_grad = a->requires_grad || b->requires_grad;
 
     struct tt** parents = NULL;
     //irrelevant if not requires_grad
@@ -266,26 +267,27 @@ struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad) {
 
 void _mul_backwards(struct tt* self) {
     if (self->parents[0]->requires_grad) {
-        struct tt* grads_0 = tt_mul(self->grads, self->parents[1], false);
-        struct tt* acc_grads_0 = tt_add(grads_0, self->parents[0]->grads, false);
+        struct tt* grads_0 = tt_mul(self->grads, self->parents[1]);
+        struct tt* acc_grads_0 = tt_add(grads_0, self->parents[0]->grads);
         tt_free(self->parents[0]->grads);
         tt_free(grads_0);
         self->parents[0]->grads = acc_grads_0;
     }
 
     if (self->parents[1]->requires_grad) {
-        struct tt* grads_1 = tt_mul(self->grads, self->parents[0], false);
-        struct tt* acc_grads_1 = tt_add(grads_1, self->parents[1]->grads, false);
+        struct tt* grads_1 = tt_mul(self->grads, self->parents[0]);
+        struct tt* acc_grads_1 = tt_add(grads_1, self->parents[1]->grads);
         tt_free(self->parents[1]->grads);
         tt_free(grads_1);
         self->parents[1]->grads = acc_grads_1;
     }
 }
 
-struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad) {
+struct tt* tt_mul(struct tt* a, struct tt* b) {
     assert(tshape_equal(a->shape, b->shape) && "Tensors are not the same shape.");
     struct tshape* copy = tshape_copy(a->shape);
 
+    bool requires_grad = a->requires_grad || b->requires_grad;
     struct tt** parents = NULL;
     if (requires_grad) {
         parents = (struct tt**)malloc(top_radix(MUL)*sizeof(struct tt*));
@@ -314,7 +316,7 @@ void _sum_backwards(struct tt* self) {
     //TODO:Expand
     struct tt* expanded_grads = tt_fill(self->parents[0]->shape, self->grads->buffer[0], false);
     //struct tt* mul_grads = tt_mul(expanded_grads, grads, false);
-    struct tt* acc_grads = tt_add(self->parents[0]->grads, expanded_grads, false);
+    struct tt* acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
 
     //tt_free(grads);
     //tt_free(mul_grads);
@@ -324,15 +326,15 @@ void _sum_backwards(struct tt* self) {
     self->parents[0]->grads = acc_grads;
 }
 
-struct tt* tt_sum(struct tt* a, bool requires_grad) {
+struct tt* tt_sum(struct tt* a) {
     struct tshape* shape = tshape_build(1, 1);
     struct tt** parents = NULL;
-    if (requires_grad) {
+    if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(SUM_REDUCE)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(shape, requires_grad);
+    struct tt* t = tt_zeros(shape, a->requires_grad);
     t->parents = parents;
     t->op = SUM_REDUCE;
     t->_backwards = &_sum_backwards;
@@ -357,20 +359,20 @@ void _reshape_backwards(struct tt* self) {
     if (!self->parents[0]->requires_grad) {
         return;
     }
-    struct tt* grads = tt_reshape(self->grads, self->parents[0]->shape, false);
-    struct tt* acc_grads = tt_add(grads, self->parents[0]->grads, false);
+    struct tt* grads = tt_reshape(self->grads, self->parents[0]->shape);
+    struct tt* acc_grads = tt_add(grads, self->parents[0]->grads);
 
     free(grads);
     self->parents[0]->grads = acc_grads;
 }
-struct tt* tt_reshape(struct tt* a, struct tshape* new_shape, bool requires_grad) {
+struct tt* tt_reshape(struct tt* a, struct tshape* new_shape) {
     struct tshape* new_shape_copy = tshape_copy(new_shape);
     struct tt** parents = NULL;
-    if (requires_grad) {
+    if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(RESHAPE)* sizeof(struct tt*));
         parents[0] = a;
     }
-    struct tt* t = tt_copy(a, requires_grad);
+    struct tt* t = tt_copy(a, a->requires_grad);
     t->shape = new_shape_copy;
     t->parents = parents;
     t->op = RESHAPE;

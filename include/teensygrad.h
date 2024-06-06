@@ -59,14 +59,14 @@ void tt_print(struct tt* t);
 void tt_free(struct tt* t);
 
 //elementwise ops
-struct tt* tt_add(struct tt* a, struct tt* b, bool requires_grad);
-struct tt* tt_neg(struct tt* a, bool requires_grad);
-struct tt* tt_mul(struct tt* a, struct tt* b, bool requires_grad);
-struct tt* tt_relu(struct tt* t, bool requires_grad);
+struct tt* tt_add(struct tt* a, struct tt* b);
+struct tt* tt_neg(struct tt* a);
+struct tt* tt_mul(struct tt* a, struct tt* b);
+struct tt* tt_relu(struct tt* t);
 //reduce ops
-struct tt* tt_sum(struct tt* a, bool requires_grad);
+struct tt* tt_sum(struct tt* a);
 //movement ops
-struct tt* tt_reshape(struct tt* a, struct tshape* new_shape, bool requires_grad);
+struct tt* tt_reshape(struct tt* a, struct tshape* new_shape);
 
 //computational graph
 struct tgraph {

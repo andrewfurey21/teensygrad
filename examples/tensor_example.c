@@ -18,16 +18,16 @@ int main(void) {
     struct tt* bias = tt_uniformint(bias_shape, 0, 10, true);
     tt_print(bias);
 
-    struct tt* wi = tt_mul(inputs, weights, true);
+    struct tt* wi = tt_mul(inputs, weights);
     tt_print(wi);
 
-    struct tt* dot_product = tt_sum(wi, true);
+    struct tt* dot_product = tt_sum(wi);
     tt_print(dot_product);
 
-    struct tt* hidden = tt_add(dot_product, bias, true);
+    struct tt* hidden = tt_add(dot_product, bias);
     tt_print(hidden);
 
-    struct tt* activation = tt_relu(hidden, true);
+    struct tt* activation = tt_relu(hidden);
     tt_print(activation);
     
     struct tgraph* cg = tgraph_build(activation);
