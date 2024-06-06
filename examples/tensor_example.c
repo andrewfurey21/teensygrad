@@ -7,7 +7,6 @@ int main(void) {
     //srand(time(NULL));
 
     struct tshape* input_shape = tshape_build(1, 4);
-    struct tshape* bias_shape = tshape_build(1, 1);
 
     struct tt* inputs = tt_uniformint(input_shape, 0, 10, false);
     tt_print(inputs);
@@ -15,31 +14,27 @@ int main(void) {
     struct tt* weights = tt_uniform(input_shape, 0, 10, true);
     tt_print(weights);
 
-    struct tt* bias = tt_uniformint(bias_shape, 0, 10, true);
-    tt_print(bias);
-
     struct tt* wi = tt_mul(inputs, weights);
     tt_print(wi);
 
-    struct tt* dot_product = tt_sum(wi);
-    tt_print(dot_product);
+    struct tshape* new_shape = tshape_build(2, 2, 2);
+    struct tt* reshape_wi = tt_reshape(wi, new_shape);
+    tt_print(reshape_wi);
 
-    struct tt* hidden = tt_add(dot_product, bias);
-    tt_print(hidden);
-
-    struct tt* activation = tt_relu(hidden);
+    struct tt* activation = tt_relu(reshape_wi);
     tt_print(activation);
+
+    struct tt* sum_activation = tt_sum(activation);
+    tt_print(sum_activation);
     
-    struct tgraph* cg = tgraph_build(activation);
+    struct tgraph* cg = tgraph_build(sum_activation);
     tgraph_zeroed(cg);
     tgraph_backprop(cg);
 
     tt_print(inputs->grads);
     tt_print(weights->grads);
-    tt_print(bias->grads);
     tt_print(wi->grads);
-    tt_print(dot_product->grads);
-    tt_print(hidden->grads);
     tt_print(activation->grads);
+    tt_print(sum_activation->grads);
     
 }

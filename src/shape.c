@@ -37,6 +37,9 @@ struct tshape* tshape_copy(struct tshape* other) {
 }
 
 bool tshape_equal(struct tshape* a, struct tshape* b) {
+    printf("A == B ?");
+    tshape_print(a);
+    tshape_print(b);
     if (a->size != b->size) {
         return false;
     }
@@ -53,13 +56,15 @@ void tshape_free(struct tshape* s) {
     free(s);
 }
 
-// TODO: return char*
+// TODO: write to and return char*
 void tshape_print(struct tshape* s) {
     assert(s->size <= MAX_DIMS && "Too many dimensions in tshape.");
+    assert(s->size > 0 && "Too few dimensions in tshape.");
     printf("shape (");
     for (size_t i = 0; i < s->size; i++) {
         assert(s->dims[i] > 0 && "Shape must be positive numbers.");
-        printf("%d,", s->dims[i]);
+        printf("%d", s->dims[i]);
+        if (i < s->size - 1) printf(",");
     }
     printf(")\n");
 }

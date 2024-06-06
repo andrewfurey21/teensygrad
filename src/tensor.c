@@ -194,11 +194,10 @@ void _relu_backwards(struct tt* self) {
 
     struct tt* grads = tt_zeros(self->shape, false);
     for (size_t i = 0; i < self->parents[0]->size; i++) {
-        if (grads->buffer[i] < self->parents[0]->buffer[i]) {
+        if (self->parents[0]->buffer[i] > 0) {
             grads->buffer[i] = 1;
         }
     }
-    //TODO:refactor this into a function
     struct tt* mul_grads = tt_mul(self->grads, grads);
     struct tt* acc_grads = tt_add(self->parents[0]->grads, mul_grads);
     tt_free(grads);
@@ -229,6 +228,7 @@ struct tt* tt_relu(struct tt* a) {
 // Binary ops
 void _add_backwards(struct tt* self) {
     if (self->parents[0]->requires_grad) {
+        //self->grads are the grads, must accumulate.
         struct tt* grads_0 = tt_add(self->grads, self->parents[0]->grads);
         tt_free(self->parents[0]->grads);
         self->parents[0]->grads = grads_0;
@@ -367,6 +367,7 @@ void _reshape_backwards(struct tt* self) {
 }
 struct tt* tt_reshape(struct tt* a, struct tshape* new_shape) {
     struct tshape* new_shape_copy = tshape_copy(new_shape);
+    assert(buflen(new_shape) == buflen(a->shape));
     struct tt** parents = NULL;
     if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(RESHAPE)* sizeof(struct tt*));

@@ -32,3 +32,5 @@ struct toptimizer* toptimizer_create(struct tgraph* net, uint64_t size, struct t
 void toptimizer_free(struct toptimizer* topt) {
     free(topt);//dont free net
 }
+
+//void toptimizer_gather_params(): params require grads but are NOOPS.
