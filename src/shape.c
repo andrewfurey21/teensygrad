@@ -36,12 +36,12 @@ struct tshape* tshape_copy(struct tshape* other) {
     return copy;
 }
 
-bool tshape_compare(struct tt* a, struct tt* b) {
-    if (a->shape->size != b->shape->size) {
+bool tshape_equal(struct tshape* a, struct tshape* b) {
+    if (a->size != b->size) {
         return false;
     }
-    for (uint32_t i = 0; i < a->shape->size; i++) {
-        if (a->shape->dims[i] != b->shape->dims[i]) {
+    for (uint32_t i = 0; i < a->size; i++) {
+        if (a->dims[i] != b->dims[i]) {
             return false;
         }
     }

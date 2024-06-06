@@ -34,8 +34,6 @@ int main(void) {
     tgraph_zeroed(cg);
     tgraph_backprop(cg);
 
-    printf("input grads address: %d\n", inputs->grads);
-
     tt_print(inputs->grads);
     tt_print(weights->grads);
     tt_print(bias->grads);//

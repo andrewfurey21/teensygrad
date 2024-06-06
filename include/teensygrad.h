@@ -41,7 +41,7 @@ struct tt {
 struct tshape* tshape_build(uint32_t size, ...);
 void tshape_free(struct tshape* s);
 struct tshape* tshape_copy(struct tshape* other);
-bool tshape_compare(struct tt* a, struct tt* b);
+bool tshape_equal(struct tshape* a, struct tshape* b);
 void tshape_print(struct tshape* s);
 
 

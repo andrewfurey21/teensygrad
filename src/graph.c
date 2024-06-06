@@ -61,8 +61,11 @@ void tgraph_backprop(struct tgraph* net) {
     assert(net->training && "Training is set to false!");
 
     // TODO: current->shape must be (1)
+    struct tshape* unit_shape = tshape_build(1, 1);
     struct tt* current = net->nodes[net->size-1];
-    if (!current->requires_grad) return;
+    assert(tshape_equal(current->shape, unit_shape) && "Last tensor must be scalar");
+    assert(current->requires_grad && "Can't do backprop on tensor without grads");
+    free(unit_shape);
 
     struct tt* grads = tt_ones(current->shape, false);
     tt_free(current->grads);
