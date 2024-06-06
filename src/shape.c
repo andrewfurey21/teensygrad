@@ -9,6 +9,7 @@
 
 struct tshape* tshape_build(uint32_t size, ...) {
     assert(MAX_DIMS >= size);
+    assert(size > 0 && "Size must be positive");
     va_list ap;
 
     struct tshape* ret = (struct tshape*)malloc(sizeof(struct tshape));
@@ -17,6 +18,7 @@ struct tshape* tshape_build(uint32_t size, ...) {
     va_start(ap, size);
 
     for (uint32_t i = 0; i < size; i++) {
+        assert(size > 0 && "Dimensions must be positive");
         ret->dims[i] = va_arg(ap, uint32_t);
     }
     va_end(ap);
@@ -55,7 +57,8 @@ void tshape_free(struct tshape* s) {
 void tshape_print(struct tshape* s) {
     assert(s->size <= MAX_DIMS && "Too many dimensions in tshape.");
     printf("shape (");
-    for (size_t i = 0; s->dims[i] != 0 && i < MAX_DIMS; i++) {
+    for (size_t i = 0; i < s->size; i++) {
+        assert(s->dims[i] > 0 && "Shape must be positive numbers.");
         printf("%d,", s->dims[i]);
     }
     printf(")\n");
