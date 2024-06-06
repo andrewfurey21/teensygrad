@@ -82,11 +82,15 @@ void tgraph_backprop(struct tgraph* net);//TODO: ONLY UPDATE WEIGHTS!!
 
 struct toptimizer {
     struct tgraph* net;
-    float learning_rate;// TODO:make part of step function call (struct)
-    void (*step)();
+    struct toptimizer_params* opt_params;
+    void (*step)(struct toptimizer* optim);
 };
 
-struct toptimizer* toptimizer_build(struct tt** params, uint64_t size, float lr, void (*step)(struct toptimizer*));
+struct toptimizer_params {
+    float learning_rate;
+};
+
+struct toptimizer* toptimizer_build(struct tt** params, uint64_t size, struct toptimizer_params* opt_params , void (*step)(struct toptimizer*));
 void toptimizer_free(struct toptimizer* topt);
 
 //optimization steps

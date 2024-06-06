@@ -36,9 +36,9 @@ int main(void) {
 
     tt_print(inputs->grads);
     tt_print(weights->grads);
-    tt_print(bias->grads);//
-    tt_print(wi->grads);//
-    tt_print(dot_product->grads);//
+    tt_print(bias->grads);
+    tt_print(wi->grads);
+    tt_print(dot_product->grads);
     tt_print(hidden->grads);
     tt_print(activation->grads);
     
