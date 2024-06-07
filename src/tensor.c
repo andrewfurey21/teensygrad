@@ -8,7 +8,6 @@
 
 #include "../include/teensygrad.h"
 
-
 struct tt* tt_zeros(struct tshape* s, bool requires_grad) {
     uint64_t size = buflen(s);
     float* buffer = (float*)calloc(size, size*(uint64_t)sizeof(float));
@@ -344,6 +343,7 @@ struct tt* tt_sum(struct tt* a) {
 
 // Movement ops
 // Permute
+
 // Expand
 
 

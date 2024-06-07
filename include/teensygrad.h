@@ -42,7 +42,7 @@ struct tt {
 struct tshape* tshape_build(uint32_t size, ...);
 void tshape_free(struct tshape* s);
 struct tshape* tshape_copy(struct tshape* other);
-struct tshape* tshape_permute(struct tshape* shape, ...);
+struct tshape* tshape_permute(struct tshape* shape, struct tshape* axes); 
 bool tshape_equal(struct tshape* a, struct tshape* b);
 void tshape_print(struct tshape* s);
 uint64_t buflen(struct tshape* s);

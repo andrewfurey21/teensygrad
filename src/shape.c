@@ -45,18 +45,14 @@ struct tshape* tshape_copy(struct tshape* other) {
     return copy;
 }
 
-struct tshape* tshape_permute(struct tshape* shape, ...){
+struct tshape* tshape_permute(struct tshape* shape, struct tshape* axes){
     struct tshape* permuted = tshape_copy(shape);
 
-    va_list ap;
-    va_start(ap, shape);
-
     for (int i = 0; i < shape->size; i++) {
-        int axis = va_arg(ap, uint32_t);
-        assert(axis >= 0 && axis < MAX_DIMS);
-        permuted->dims[i] = shape->dims[axis];
+        int axis = axes->dims[i];
+        assert(axis > 0 && axis <= MAX_DIMS);
+        permuted->dims[i] = shape->dims[axis-1];
     }
-    va_end(ap);
     assert(buflen(permuted) == buflen(shape) && "Possibly repeated axis");
     return permuted;
 }
