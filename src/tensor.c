@@ -377,6 +377,7 @@ struct tt* tt_reshape(struct tt* a, struct tshape* new_shape) {
         reshaped_grads = tt_reshape(a->grads, new_shape_copy);
     }
     struct tt* t = tt_copy(a, a->requires_grad);
+    free(t->grads);
     t->shape = new_shape_copy;
     t->parents = parents;
     t->op = RESHAPE;
