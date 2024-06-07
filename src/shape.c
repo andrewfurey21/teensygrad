@@ -37,9 +37,6 @@ struct tshape* tshape_copy(struct tshape* other) {
 }
 
 bool tshape_equal(struct tshape* a, struct tshape* b) {
-    printf("A == B ?");
-    tshape_print(a);
-    tshape_print(b);
     if (a->size != b->size) {
         return false;
     }

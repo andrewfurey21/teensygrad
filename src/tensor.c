@@ -365,19 +365,23 @@ void _reshape_backwards(struct tt* self) {
     free(grads);
     self->parents[0]->grads = acc_grads;
 }
+
 struct tt* tt_reshape(struct tt* a, struct tshape* new_shape) {
     struct tshape* new_shape_copy = tshape_copy(new_shape);
     assert(buflen(new_shape) == buflen(a->shape));
     struct tt** parents = NULL;
+    struct tt* reshaped_grads = NULL;
     if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(RESHAPE)* sizeof(struct tt*));
         parents[0] = a;
+        reshaped_grads = tt_reshape(a->grads, new_shape_copy);
     }
     struct tt* t = tt_copy(a, a->requires_grad);
     t->shape = new_shape_copy;
     t->parents = parents;
     t->op = RESHAPE;
     t->_backwards = &_reshape_backwards;
+    t->grads = reshaped_grads;
     return t;
 }
 
