@@ -8,13 +8,6 @@
 
 #include "../include/teensygrad.h"
 
-uint64_t buflen(struct tshape* s) {
-    uint64_t size = 1;
-    for (uint32_t i = 0; i < s->size; i++) {
-        size *= s->dims[i];
-    }
-    return size;
-}
 
 struct tt* tt_zeros(struct tshape* s, bool requires_grad) {
     uint64_t size = buflen(s);

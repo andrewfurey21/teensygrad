@@ -6,6 +6,7 @@
 #ifndef _TEENSYGRAD_H
 #define _TEENSYGRAD_H
 
+
 enum top {
     NOOP=0,
     RELU,
@@ -41,9 +42,10 @@ struct tt {
 struct tshape* tshape_build(uint32_t size, ...);
 void tshape_free(struct tshape* s);
 struct tshape* tshape_copy(struct tshape* other);
+struct tshape* tshape_permute(struct tshape* shape, ...);
 bool tshape_equal(struct tshape* a, struct tshape* b);
 void tshape_print(struct tshape* s);
-
+uint64_t buflen(struct tshape* s);
 
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
 struct tt* tt_zeros(struct tshape* s, bool requires_grad);
