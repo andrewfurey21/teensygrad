@@ -343,9 +343,49 @@ struct tt* tt_sum(struct tt* a) {
 
 // Movement ops
 // Permute
+// void _permute_backwards(struct tt* self) {
+//
+// }
+//
+// struct tt* tt_permute(struct tt* t, struct tshape* axes) {
+//     assert(t->shape->size == axes->size);
+//     struct tt* tensor_copy = tt_copy(t, t->requires_grad);
+//     struct tshape* permuted_shape = tshape_permute(t->shape, axes);
+//     uint64_t buf_size = buflen(tensor_copy->shape);
+//
+//     for (uint64_t i = 0; i < buf_size; i++) {
+//         size_t new_index = 0;
+//         for (int j = 0; j < axes->size; j++) {
+//             uint32_t shape_coord = permuted_shape->dims[j];
+//             uint32_t axis = axes->dims[i];
+//             uint32_t old_coord =
+//             new_index += axis*shape_coord*old_coord;
+//         }
+//         tensor_copy->buffer[new_index] = t->buffer[i];
+//
+//     }
+//     free(tensor_copy->shape);
+//     tensor_copy->shape = permuted_shape;
+//     return tensor_copy;
+// }
 
 // Expand
+void _expand_backwards(struct tt* self) {
 
+}
+struct tt* tt_expand(struct tt* a, struct tshape* shape) {
+    int diff = shape->size - a->shape->size;
+    assert(diff > 0 && "shape must have higher dimensions");
+    //maybe to slice?
+    for (int i = 0; i < a->shape->size; i++) {
+        assert(shape->dims[i+diff] == a->shape->dims[i]);
+    }
+    struct tt* expanded_tensor = tt_zeros(shape, a->requires_grad);
+
+    //expand here    
+
+    return expanded_tensor;
+}
 
 // Reshape
 void _reshape_backwards(struct tt* self) {

@@ -68,6 +68,8 @@ struct tt* tt_relu(struct tt* t);
 //reduce ops
 struct tt* tt_sum(struct tt* a);
 //movement ops
+struct tt* tt_permute(struct tt* t, struct tshape* axes);
+struct tt* tt_expand(struct tt* a, struct tshape* shape);
 struct tt* tt_reshape(struct tt* a, struct tshape* new_shape);
 
 //computational graph

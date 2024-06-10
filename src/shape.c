@@ -70,7 +70,6 @@ bool tshape_equal(struct tshape* a, struct tshape* b) {
     return true;
 }
 
-
 void tshape_free(struct tshape* s) {
     free(s->dims);
     free(s);
