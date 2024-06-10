@@ -34,3 +34,4 @@ void toptimizer_free(struct toptimizer* topt) {
 }
 
 //void toptimizer_gather_params(): params require grads but are NOOPS.
+//retain grad? for non leaf nodes?

@@ -26,7 +26,7 @@ int main(void) {
 
     struct tt* sum_activation = tt_sum(activation);
     tt_print(sum_activation);
-    
+
     struct tgraph* cg = tgraph_build(sum_activation);
     tgraph_zeroed(cg);
     tgraph_backprop(cg);
