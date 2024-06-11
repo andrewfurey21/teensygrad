@@ -10,6 +10,7 @@ size_t top_radix(enum top op) {
         case NEG:
         case SUM_REDUCE:
         case RESHAPE:
+        case EXPAND:
             return 1;
         case ADD:
         case MUL:
@@ -34,6 +35,9 @@ void print_op_string(enum top op) {
             printf("SUM REDUCE\n");
             return;
         case RESHAPE:
+            printf("RESHAPE\n");
+            return;
+        case EXPAND:
             printf("RESHAPE\n");
             return;
         case ADD:
