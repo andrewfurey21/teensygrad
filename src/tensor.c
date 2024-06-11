@@ -313,15 +313,15 @@ void _sum_backwards(struct tt* self) {
     self->parents[0]->grads = acc_grads;
 }
 
-struct tt* tt_sum(struct tt* a) {
-    struct tshape* shape = tshape_build(1, 1);
+struct tt* tt_sum(struct tt* a, struct tshape* axes) {
+    struct tshape* new_shape = tshape_build(1, 1);
     struct tt** parents = NULL;
     if (a->requires_grad) {
         parents = (struct tt**)malloc(top_radix(SUM_REDUCE)*sizeof(struct tt*));
         parents[0] = a;
     }
 
-    struct tt* t = tt_zeros(shape, a->requires_grad);
+    struct tt* t = tt_zeros(new_shape, a->requires_grad);
     t->parents = parents;
     t->op = SUM_REDUCE;
     t->_backwards = &_sum_backwards;
@@ -366,8 +366,9 @@ struct tt* tt_sum(struct tt* a) {
 
 // Expand
 void _expand_backwards(struct tt* self) {
-    
+
 }
+
 struct tt* tt_expand(struct tt* a, struct tshape* shape) {
     int diff = shape->size - a->shape->size;
     assert(diff >= 0 && "shape must have higher dimensions");

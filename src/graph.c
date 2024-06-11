@@ -79,3 +79,5 @@ void tgraph_backprop(struct tgraph* net) {
     }
 }
 
+// TODO: graph to string (or visualize graph, output to image)
+

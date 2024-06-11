@@ -46,6 +46,7 @@ struct tshape* tshape_copy(struct tshape* other);
 struct tshape* tshape_permute(struct tshape* shape, struct tshape* axes); 
 bool tshape_equal(struct tshape* a, struct tshape* b);
 void tshape_print(struct tshape* s);
+bool tshape_duplicates(struct tshape* axes);
 uint64_t buflen(struct tshape* s);
 
 struct tt* tt_from_buffer(struct tshape* s, float* buffer, bool requires_grads);
@@ -67,7 +68,7 @@ struct tt* tt_neg(struct tt* a);
 struct tt* tt_mul(struct tt* a, struct tt* b);
 struct tt* tt_relu(struct tt* t);
 //reduce ops
-struct tt* tt_sum(struct tt* a);
+struct tt* tt_sum(struct tt* a, struct tshape* axes);
 //movement ops
 struct tt* tt_permute(struct tt* t, struct tshape* axes);
 struct tt* tt_expand(struct tt* a, struct tshape* shape);
@@ -83,7 +84,7 @@ struct tgraph* tgraph_build(struct tt* x);
 void tgraph_free(struct tgraph* net);
 void tgraph_zeroed(struct tgraph* net);
 //backprop
-void tgraph_backprop(struct tgraph* net);//TODO: ONLY UPDATE WEIGHTS!!
+void tgraph_backprop(struct tgraph* net);
 
 struct toptimizer {
     struct tgraph* net;

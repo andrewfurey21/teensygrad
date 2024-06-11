@@ -1,7 +1,7 @@
 #include "assert.h"
 #include "../include/teensygrad.h"
 
-void tsgd(struct toptimizer* optim) {
+void tsgd(struct toptimizer* optim) {//maybe just opt_params and net.
     for (uint64_t i = 0; i < optim->net->size; i++) {
         struct tt* t = optim->net->nodes[i];
 
@@ -35,3 +35,4 @@ void toptimizer_free(struct toptimizer* topt) {
 
 //void toptimizer_gather_params(): params require grads but are NOOPS.
 //retain grad? for non leaf nodes?
+// TODO: ONLY UPDATE WEIGHTS!!
