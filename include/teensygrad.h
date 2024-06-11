@@ -13,6 +13,7 @@ enum top {
     NEG,
     SUM_REDUCE,
     RESHAPE,
+    EXPAND,
     ADD,
     MUL
 };

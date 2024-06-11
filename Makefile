@@ -30,7 +30,7 @@ OBJ=graph.o op.o optimizers.o shape.o tensor.o
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = Makefile include/teensygrad.h
 
-all: $(EXECDIR) $(OBJDIR) $(ALIB) $(EXEC)
+all: $(EXECDIR) $(OBJDIR) $(ALIB) $(EXEC) $(DEPS)
 
 $(EXEC): $(ALIB) $(OBJDIR) $(EXAMPLE)
 	$(CC) $(COMMON) $(CFLAGS) $(EXAMPLE) -o $(EXECDIR)/$@ $(ALIB)

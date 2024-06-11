@@ -304,14 +304,9 @@ void _sum_backwards(struct tt* self) {
     if (!self->parents[0]->requires_grad) {
         return;
     }
-    //struct tt* grads = tt_ones(self->parents[0]->shape, false);
-    //TODO:Expand
     struct tt* expanded_grads = tt_fill(self->parents[0]->shape, self->grads->buffer[0], false);
-    //struct tt* mul_grads = tt_mul(expanded_grads, grads, false);
     struct tt* acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
 
-    //tt_free(grads);
-    //tt_free(mul_grads);
     tt_free(self->parents[0]->grads);
     tt_free(expanded_grads);
 
@@ -371,18 +366,30 @@ struct tt* tt_sum(struct tt* a) {
 
 // Expand
 void _expand_backwards(struct tt* self) {
-
+    
 }
 struct tt* tt_expand(struct tt* a, struct tshape* shape) {
     int diff = shape->size - a->shape->size;
-    assert(diff > 0 && "shape must have higher dimensions");
-    //maybe to slice?
+    assert(diff >= 0 && "shape must have higher dimensions");
+    struct tt** parents = NULL;
+
     for (int i = 0; i < a->shape->size; i++) {
         assert(shape->dims[i+diff] == a->shape->dims[i]);
     }
     struct tt* expanded_tensor = tt_zeros(shape, a->requires_grad);
 
-    //expand here    
+    for (uint32_t i = 0; i < expanded_tensor->size; i++) {
+        expanded_tensor->buffer[i] = a->buffer[i % a->size];
+    }
+
+    if (a->requires_grad) {
+        parents = (struct tt**)malloc(top_radix(EXPAND)*sizeof(struct tt*));
+        parents[0] = a;
+    }
+
+    expanded_tensor->parents = parents;
+    expanded_tensor->_backwards = &_expand_backwards;
+    expanded_tensor->op = EXPAND;
 
     return expanded_tensor;
 }
