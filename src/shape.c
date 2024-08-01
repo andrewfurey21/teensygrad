@@ -71,6 +71,7 @@ bool tshape_equal(struct tshape* a, struct tshape* b) {
 }
 
 bool tshape_duplicates(struct tshape* axes) {
+    assert(axes->size <= MAX_DIMS);
     for (int i = 0; i < axes->size-1; i++) {
         for (int j = i+1; j < axes->size; j++) {
             if (axes->dims[i] == axes->dims[j]) return true;

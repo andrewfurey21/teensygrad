@@ -314,6 +314,10 @@ void _sum_backwards(struct tt* self) {
 }
 
 struct tt* tt_sum(struct tt* a, struct tshape* axes) {
+    assert(!tshape_duplicates(axes));
+    uint32_t new_size = axes->size - a->shape->size;  
+    assert(new_size >= 0);
+    //new_size = 0 means array of size 1 (scalar)
     struct tshape* new_shape = tshape_build(1, 1);
     struct tt** parents = NULL;
     if (a->requires_grad) {
