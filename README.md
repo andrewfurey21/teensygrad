@@ -1,15 +1,23 @@
 # Teensygrad
 
-A small tensor library inspired by tinygrad and ggml.
+A small deep learning library.
 
-## Supported Backends
+## Features
 
-- [ ] CUDA
-- [ ] Vulkan
+- [ ] tensor struct: shape, strides, views, broadcasting
+- [ ] backwards mode autograd
+- [ ] opencl backend
 
 ## Examples
 
-- [ ] convolutional net for MNIST
-- [ ] yolov10 implementation
-- [ ] llama implementation
+- [ ] mnist (conv, batchnorm, maxpool, relu, linear, cce)
+
+## Roadmap
+
+- [ ] tensor
+    - [ ] storage vs tensor
+    - [ ] shape, strides, views, broadcasting
+    - [ ] ops
+- [ ] autograd
+- [ ] opencl
 
