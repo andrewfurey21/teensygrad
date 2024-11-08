@@ -64,6 +64,11 @@ tstorage* tstorage_copy(tstorage *s) {
     return tstorage_from_buffer(s->size, s->buffer);
 }
 
+void tstorage_to_zeros(tstorage *s) {
+  free(s->buffer);
+  s->buffer = (float*)calloc(s->size, sizeof(float));
+}
+
 // TODO: test please
 uint64_t tstorage_logical_to_physical(tt* t, ttuple* logical_index) {
     assert(logical_index->size == t->data->size);
@@ -195,6 +200,16 @@ tt *tt_copy(tt *original, bool requires_grad) {
   t->_backwards = NULL;
 
   return t;
+}
+
+void tt_to_zeros(tt *t) {
+  tstorage_to_zeros(t->data);
+}
+
+void tt_to_n(struct tt* t, float n) {
+  for (int i = 0; i < t->data->size; i++) {
+    tstorage_setitem(t->data, i, n);
+  }
 }
 
 void tt_print(tt *t) {

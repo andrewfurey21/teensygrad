@@ -91,18 +91,18 @@ tt* tt_permute(tt* t, ttuple* axes);
 tt* tt_expand(tt* a, ttuple* shape);
 tt* tt_reshape(tt* a, ttuple* new_shape);
 
-// //computational graph
-// struct tgraph {
-//     struct tt** nodes;
-//     size_t size;
-//     bool training;
-// };
-// struct tgraph* tgraph_build(struct tt* x);
-// void tgraph_free(struct tgraph* net);
-// void tgraph_zeroed(struct tgraph* net);
-// //backprop
-// void tgraph_backprop(struct tgraph* net);
-//
+//computational graph
+struct tgraph {
+    struct tt** nodes;
+    size_t size;
+    bool training;
+};
+struct tgraph* tgraph_build(struct tt* x);
+void tgraph_free(struct tgraph* net);
+void tgraph_zeroed(struct tgraph* net);
+//backprop
+void tgraph_backprop(struct tgraph* net);
+
 // struct toptimizer {
 //     struct tgraph* net;
 //     struct toptimizer_params* opt_params;
