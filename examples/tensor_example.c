@@ -7,28 +7,11 @@
 int main(void) {
     //srand(time(NULL));
 
-    ttuple* t = ttuple_build(3, 1, 2, 3);
+    ttuple* input_shape = ttuple_build(2, 2, 5);
 
-    uint64_t size = ttuple_mul(t);
-    printf("tuple mul: %d", (int)size);
-
-    ttuple* t_copy = ttuple_copy(t);
-    ttuple_print(t);
-    ttuple_copy(t_copy);
-
-    ttuple* other = ttuple_build(2, 1, 2);
-    bool other_equal = ttuple_equal(t, other);
-    bool equal_copy = ttuple_equal(t, t_copy);
-    printf("t == other: %d", other_equal);
-    printf("t == copy: %d", equal_copy);
-
-    ttuple_print(t);
-    ttuple_print(t_copy);
-    ttuple_print(other);
-
-    ttuple_free(t);
-    ttuple_free(t_copy);
-    ttuple_free(other);
+    tt* t = tt_uniformint(input_shape, 0, 5, true);
+    tt_print(t);
+    tt_free(t);
 
     // struct tshape* input_shape = tshape_build(1, 4);
     //

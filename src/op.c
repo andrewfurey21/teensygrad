@@ -23,7 +23,7 @@ size_t top_radix(enum top op) {
 void print_op_string(enum top op) {
     switch (op) {
         case NOOP:
-            printf("NO OP\n");
+            printf("LEAF NODE\n");
             return;
         case RELU:
             printf("RELU\n");

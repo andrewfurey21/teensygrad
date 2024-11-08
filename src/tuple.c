@@ -18,12 +18,22 @@ ttuple* ttuple_build(uint32_t size, ...) {
     ret->items = (int32_t*)malloc(size * sizeof(int32_t));
     va_start(ap, size);
 
-    for (uint32_t i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         ret->items[i] = va_arg(ap, uint32_t);
         //should there be a max items[i]?
         assert(ret->items[i] > 0 && "Dimensions must be positive");
     }
     va_end(ap);
+    return ret;
+}
+
+ttuple* ttuple_ones(uint32_t size) {
+    ttuple* ret = (ttuple*)malloc(sizeof(ttuple));
+    ret->size = size;
+    ret->items = (int32_t*)malloc(size * sizeof(int32_t));
+    for (int i = 0; i < size; i++) {
+        ret->items[i] = 1;
+    }
     return ret;
 }
 

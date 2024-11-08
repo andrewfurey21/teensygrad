@@ -10,7 +10,7 @@ CC=gcc
 AR=ar
 ARFLAGS=rcs
 OPTS=-O3
-LDFLAGS= 
+LDFLAGS= -lm
 COMMON= -Iinclude/ -Isrc/
 CFLAGS=-Wall
 
@@ -33,7 +33,7 @@ DEPS = Makefile include/teensygrad.h
 all: $(EXECDIR) $(OBJDIR) $(ALIB) $(EXEC) $(DEPS)
 
 $(EXEC): $(ALIB) $(OBJDIR) $(EXAMPLE)
-	$(CC) $(COMMON) $(CFLAGS) $(EXAMPLE) -o $(EXECDIR)/$@ $(ALIB)
+	$(CC) $(COMMON) $(CFLAGS) $(EXAMPLE) -o $(EXECDIR)/$@ $(ALIB) $(LDFLAGS)
 
 $(ALIB): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^

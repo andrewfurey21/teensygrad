@@ -28,6 +28,7 @@ typedef struct {
 } ttuple;
 
 ttuple* ttuple_build(uint32_t size, ...);
+ttuple* ttuple_ones(uint32_t size);
 uint64_t ttuple_mul(ttuple* s);
 ttuple* ttuple_copy(ttuple* other);
 bool ttuple_equal(ttuple* a, ttuple* b);
@@ -74,20 +75,21 @@ void tt_to_zeros(tt* t);
 void tt_to_n(struct tt* t, float n);
 void tt_print(tt* t);
 void tt_free(tt* t);
+//tt* slice, good way to write function for slicing?
+//tt* tt_reshape (tt* t);//gunna get tricky with nested views. looping etc. reshape like numpy/tinygrad.
 
 //elementwise ops
-struct tt* tt_add(struct tt* a, struct tt* b);
-struct tt* tt_neg(struct tt* a);
-struct tt* tt_mul(struct tt* a, struct tt* b);
-struct tt* tt_max(struct tt* a, struct tt* b);
+tt* tt_add(tt* a, tt* b);
+tt* tt_neg(tt* a);
+tt* tt_mul(tt* a, tt* b);
+tt* tt_max(tt* a, tt* b);
 //reduce ops
-struct tt* tt_sum(struct tt* a, struct tshape* axes);
+tt* tt_sum(tt* a, ttuple* axes);
 //movement ops
 // TODO: use new storage abstraction
-struct tt* tt_permute(struct tt* t, struct tshape* axes);
-struct tt* tt_expand(struct tt* a, struct tshape* shape);
-struct tt* tt_reshape(struct tt* a, struct tshape* new_shape);
-
+tt* tt_permute(tt* t, ttuple* axes);
+tt* tt_expand(tt* a, ttuple* shape);
+tt* tt_reshape(tt* a, ttuple* new_shape);
 
 // //computational graph
 // struct tgraph {
