@@ -25,7 +25,7 @@ endif
 
 CFLAGS+=$(OPTS)
 
-OBJ=graph.o op.o optimizers.o shape.o tensor.o
+OBJ=graph.o op.o optimizers.o tuple.o tensor.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
 DEPS = Makefile include/teensygrad.h

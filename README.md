@@ -7,6 +7,7 @@ A small deep learning library.
 - [ ] tensor struct: shape, strides, views, broadcasting
 - [ ] backwards mode autograd
 - [ ] opencl backend
+- [ ] tests
 
 ## Examples
 
