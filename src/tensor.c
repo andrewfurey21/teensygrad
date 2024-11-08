@@ -6,6 +6,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "time.h"
+#include "malloc.h"
 
 #include "../include/teensygrad.h"
 #include <math.h>
@@ -23,6 +24,9 @@ tstorage* tstorage_new(uint64_t buffer_length) {
 
 //maybe not a good idea memory wise but whatever
 tstorage* tstorage_from_buffer(uint64_t size, float* buffer) {
+  // TODO: check if this works
+  //
+  //uint64_t size = malloc_usable_size(buffer)/sizeof(float);
   float* buffer_copy = (float*)calloc(size, sizeof(float));
   for (int i = 0; i < size; i++) {
     buffer_copy[i] = buffer[i];
@@ -212,6 +216,9 @@ void tt_to_n(struct tt* t, float n) {
   }
 }
 
+tt* tt_slice() {
+}
+
 void tt_print(tt *t) {
   printf("tensor: \n  ");
   if (!t) {
@@ -242,9 +249,13 @@ void tt_free(tt *t) {
   free(t);
 }
 
-// // -----------------------------------------------------------
-// // Ops + derivatives
-// // Unary ops
+// -----------------------------------------------------------
+//
+// Ops + derivatives
+// TODO: use storage abstraction!
+// TODO: move into kernels.c or something
+//
+// Unary ops
 // void _neg_backwards(tt *self) {
 //   if (!self->parents[0]->requires_grad) {
 //     return;
@@ -259,7 +270,8 @@ void tt_free(tt *t) {
 // }
 //
 // tt *tt_neg(tt *a) {
-//   ttuple *copy = ttuple_copy(a->shape);
+//   ttuple *shape = ttuple_copy(a->shape);
+//   tt *t = tt_zeros(shape, a->requires_grad);
 //
 //   tt **parents = NULL;
 //   if (a->requires_grad) {
@@ -267,12 +279,13 @@ void tt_free(tt *t) {
 //     parents[0] = a;
 //   }
 //
-//   tt *t = tt_zeros(copy, a->requires_grad);
 //   t->parents = parents;
 //   t->op = NEG;
 //   t->_backwards = &_neg_backwards;
-//   for (uint64_t i = 0; i < a->size; i++) {
-//     t->buffer[i] = -a->buffer[i];
+//
+//   for (uint64_t i = 0; i < a->data->size; i++) {
+//     float value = tstorage_getitem(a->data, i);
+//     tstorage_setitem(t->data, i, -value);
 //   }
 //
 //   return t;

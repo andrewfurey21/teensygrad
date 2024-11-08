@@ -73,9 +73,9 @@ void tt_copy_buffer(tt* dest, tt* src);
 tt* tt_copy(tt* original, bool requires_grad);
 void tt_to_zeros(tt* t);
 void tt_to_n(struct tt* t, float n);
+tt* tt_slice();//, good way to write function for slicing?
 void tt_print(tt* t);
 void tt_free(tt* t);
-//tt* slice, good way to write function for slicing?
 //tt* tt_reshape (tt* t);//gunna get tricky with nested views. looping etc. reshape like numpy/tinygrad.
 
 //elementwise ops
@@ -86,7 +86,6 @@ tt* tt_max(tt* a, tt* b);
 //reduce ops
 tt* tt_sum(tt* a, ttuple* axes);
 //movement ops
-// TODO: use new storage abstraction
 tt* tt_permute(tt* t, ttuple* axes);
 tt* tt_expand(tt* a, ttuple* shape);
 tt* tt_reshape(tt* a, ttuple* new_shape);
@@ -103,19 +102,21 @@ void tgraph_zeroed(struct tgraph* net);
 //backprop
 void tgraph_backprop(struct tgraph* net);
 
-// struct toptimizer {
-//     struct tgraph* net;
-//     struct toptimizer_params* opt_params;
-//     void (*step)(struct toptimizer* optim);
-// };
-//
-// struct toptimizer_params {
-//     float learning_rate;
-// };
-//
-// struct toptimizer* toptimizer_build(struct tt** params, uint64_t size, struct toptimizer_params* opt_params , void (*step)(struct toptimizer*));
-// void toptimizer_free(struct toptimizer* topt);
-//
-// //optimization steps
-// void tsgd(struct toptimizer* optim);
+//nn
+struct toptimizer {
+    struct tgraph* net;
+    struct toptimizer_params* opt_params;
+    void (*step)(struct toptimizer* optim);
+};
+
+struct toptimizer_params {
+    float learning_rate;
+};
+
+struct toptimizer* toptimizer_build(struct tt** params, uint64_t size, struct toptimizer_params* opt_params , void (*step)(struct toptimizer*));
+void toptimizer_free(struct toptimizer* topt);
+
+//optimization steps
+void tsgd(struct toptimizer* optim);
+// TODO: adam
 #endif
