@@ -75,14 +75,15 @@ void tstorage_to_zeros(tstorage *s) {
 
 // TODO: test please
 uint64_t tstorage_logical_to_physical(tt* t, ttuple* logical_index) {
+    ttuple* t_strides = t->view->strides;
     assert(logical_index->size == t->data->size);
-    assert(logical_index->size == t->strides->size);
+    assert(logical_index->size == t_strides->size);
 
     uint64_t index = 0;
     for (int i = 0; i < logical_index->size; i++) {
-        index += logical_index->items[i] * t->strides->items[i];
+        index += logical_index->items[i] * t_strides->items[i];
     }
-    return index + t->offset;
+    return index + t->view->offset;
 }
 
 
@@ -99,9 +100,12 @@ tt *tt_zeros(ttuple *s, bool requires_grad) {
 
   tt *t = (tt *)malloc(sizeof(tt));
 
-  t->shape = copy;
-  t->strides = ttuple_ones(copy->size);
-  t->offset = 0;
+  // TODO: Make functions for views
+  tview* view = (tview*)malloc(sizeof(tview));
+  t->view = view;
+  t->view->shape = copy;
+  t->view->strides = ttuple_ones(copy->size);
+  t->view->offset = 0;
 
   t->data = data;
   t->requires_grad = requires_grad;
@@ -128,9 +132,12 @@ tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grad) {
   ttuple *copy = ttuple_copy(s);
   ttuple *strides = ttuple_ones(copy->size);
 
-  ret->shape = copy;
-  ret->strides = strides;
-  ret->offset = 0;
+  tview* view = (tview*)malloc(sizeof(tview));
+  ret->view = view;
+  
+  ret->view->shape = copy;
+  ret->view->strides = strides;
+  ret->view->offset = 0;
 
   ret->data = data;
 
@@ -182,8 +189,8 @@ tt *tt_uniformint(ttuple *s, float min, float max, bool requires_grad) {
 }
 
 tt *tt_copy(tt *original, bool requires_grad) {
-  ttuple *shape = ttuple_copy(original->shape);
-  ttuple *strides = ttuple_copy(original->strides);
+  ttuple *shape = ttuple_copy(original->view->shape);
+  ttuple *strides = ttuple_copy(original->view->strides);
 
   tt *grads = NULL;
   if (requires_grad) {
@@ -192,9 +199,11 @@ tt *tt_copy(tt *original, bool requires_grad) {
 
   tt *t = (tt *)malloc(sizeof(tt));
 
-  t->shape = shape;
-  t->strides = strides;
-  t->offset = 0;
+  tview* view = (tview*)malloc(sizeof(tview));
+  t->view = view;
+  t->view->shape = shape;
+  t->view->strides = strides;
+  t->view->offset = 0;
 
   t->data = tstorage_copy(original->data);
   t->requires_grad = requires_grad;
@@ -225,7 +234,7 @@ void tt_print(tt *t) {
     printf("values: (null)\n");
     return;
   }
-  ttuple_print(t->shape);
+  ttuple_print(t->view->shape);
   if (t->requires_grad) {
     printf("  op: ");
     print_op_string(t->op);
@@ -237,9 +246,15 @@ void tt_print(tt *t) {
   printf("]\n");
 }
 
+void tview_free(tview* view) {
+  ttuple_free(view->shape);
+  ttuple_free(view->strides);
+  free(view);
+}
+
+// should probably free any grads from children.
 void tt_free(tt *t) {
-  ttuple_free(t->shape);
-  ttuple_free(t->strides);
+  tview_free(t->view);
   tstorage_dec_refcount(t->data);
 
   free(t->parents);
@@ -251,7 +266,7 @@ void tt_free(tt *t) {
 
 // -----------------------------------------------------------
 //
-// Ops + derivatives
+// lower level Ops + derivatives
 // TODO: use storage abstraction!
 // TODO: move into kernels.c or something
 //
@@ -541,3 +556,9 @@ void tt_free(tt *t) {
 //   t->grads = reshaped_grads;
 //   return t;
 // }
+// TODO: padding also
+//
+// -----------------------------------------------------------
+//
+// This is where higher level ops would go, like convs, batchnorms and maxpools
+// maybe have lower level ops inside there own file.

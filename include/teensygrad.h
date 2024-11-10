@@ -2,6 +2,7 @@
 #include "stdarg.h"
 #include "stdbool.h"
 #include "stdlib.h"
+#include <cstdint>
 #include <stdint.h>
 
 #ifndef _TEENSYGRAD_H
@@ -44,21 +45,25 @@ typedef struct {
     uint64_t size;
 } tstorage;
 
-struct tt {
+typedef struct {
     ttuple* shape;
     ttuple* strides;
     uint64_t offset;
-    tstorage* data;
+} tview;
 
-    struct tt** parents;
-    void (*_backwards)(struct tt*);
+typedef struct tt tt;
+struct tt {
+    tstorage* data;
+    tview* view;
+
+    tt** parents;
+    void (*_backwards)(tt*);
     enum top op;
 
     bool requires_grad;
     struct tt* grads;
 };
 
-typedef struct tt tt;
 
 // TODO: empty, logical index to physical index, setitem/item, arange, tostring (cache in repr, use inside print), view/reshape
 
