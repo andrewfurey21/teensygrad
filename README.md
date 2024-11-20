@@ -1,4 +1,4 @@
-# Teensygrad
+# teensygrad
 
 A small deep learning library.
 
@@ -6,19 +6,10 @@ A small deep learning library.
 
 - [ ] tensor struct: shape, strides, views, broadcasting
 - [ ] backwards mode autograd
-- [ ] opencl backend
+- [ ] ops
+- [ ] higher level ops (convs, batchnorms, relu, linears, cce, maxpools)
 - [ ] tests
 
 ## Examples
 
-- [ ] mnist (conv, batchnorm, maxpool, relu, linear, cce)
-
-## Roadmap
-
-- [ ] tensor
-    - [ ] storage vs tensor
-    - [ ] shape, strides, views, broadcasting
-    - [ ] ops
-- [ ] autograd
-- [ ] opencl
-
+- [ ] mnist (relu, linear, batchnorms, cce, maxpools, convs)
