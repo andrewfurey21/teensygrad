@@ -4,11 +4,11 @@ A small deep learning library.
 
 ## Features
 
-- [ ] tensor struct: shape, strides, views, broadcasting
+- [ ] tensor struct: shape, strides, views
 - [ ] backwards mode autograd
-- [ ] ops
-- [ ] higher level ops (convs, batchnorms, relu, linears, cce, maxpools)
-- [ ] tests
+- [ ] ops (convs, batchnorms, relu, linears, cce, maxpools)
+- [ ] adam optimizer
+- [ ] opencl backend
 
 ## Examples
 

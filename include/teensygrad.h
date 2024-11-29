@@ -75,13 +75,12 @@ tt *tt_uniformint(ttuple *s, float min, float max, bool requires_grad);
 void tt_copy_buffer(tt *dest, tt *src);
 tt *tt_copy(tt *original, bool requires_grad);
 void tt_to_zeros(tt *t);
-void tt_to_n(struct tt *t, float n);
-tt *tt_slice(); //, good way to write function for slicing?
+void tt_to_n(tt *t, float n);
 void tt_print(tt *t);
-void tt_free(tt *t);
 tt* tt_view(tt* tensor, tview* view);
+void tt_free(tt *t);
 
-// elementwise ops
+// alu ops
 tt *tt_add(tt *a, tt *b);
 tt *tt_neg(tt *a);
 tt *tt_mul(tt *a, tt *b);
