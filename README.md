@@ -6,9 +6,9 @@ This library has no dependencies, it's written from scratch in C.
 
 ## Features
 
-- [ ] tensor struct: shape, strides, views
-- [ ] backwards mode autograd
-- [ ] ops (convs, batchnorms, relu, linears, cce, maxpools)
+- [ ] tensor
+- [ ] backwards mode autodifferentiation
+- [ ] ops (add, mul, sum, convs, batchnorms, relu, linears, cce, maxpools)
 - [ ] adam optimizer
 
 ## Examples
