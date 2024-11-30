@@ -267,6 +267,7 @@ void tt_print(tt *t) {
     printf("  op: ");
     print_op_string(t->op);
   } else {
+    // TODO: if not requires grad, maybe check where it came from, like grad of mul or something
     printf("  NO GRADS\n");
   }
   printf("  values: [ ");
@@ -417,8 +418,6 @@ void _sum_backwards(tt *self) {
     ttuple *current = ttuple_zeros(par_shape->size);
 
     uint64_t along_axis = par_shape->items[expand_axis];
-    printf("along axis: %d\n", (int)along_axis);
-    printf("expand axis: %d\n", (int)expand_axis);
     for (uint64_t i = 0; i < self->grads->data->size; i++) {
       //expanding
       for (uint64_t j = 0; j < along_axis; j++) {
@@ -514,6 +513,45 @@ tt *tt_sum(tt *a, int axis) {
   return t;
 }
 
+void _relu_backwards(tt *self) {
+  if (!self->parents[0]->requires_grad) {
+    return;
+  }
+
+  tt *grads = tt_zeros(self->view->shape, false);
+  for (size_t i = 0; i < self->parents[0]->data->size; i++) {
+    if (self->parents[0]->data->buffer[i] > 0) {
+      grads->data->buffer[i] = 1;
+    }
+  }
+  tt *mul_grads = tt_mul(self->grads, grads);
+  tt *acc_grads = tt_add(self->parents[0]->grads, mul_grads);
+  tt_free(grads);
+  tt_free(self->parents[0]->grads);
+  tt_free(mul_grads);
+  self->parents[0]->grads = acc_grads;
+}
+
+tt *tt_relu(tt *a) {
+  ttuple *copy = ttuple_copy(a->view->shape);
+  tt **parents = NULL;
+  if (a->requires_grad) {
+    parents = (tt **)malloc(top_radix(RELU) * sizeof(tt *));
+    parents[0] = a;
+  }
+
+  tt *t = tt_zeros(copy, a->requires_grad);
+  t->parents = parents;
+  t->op = RELU;
+  t->_backwards = &_relu_backwards;
+
+  for (uint64_t i = 0; i < a->data->size; i++) {
+    t->data->buffer[i] = a->data->buffer[i] * (a->data->buffer[i] > 0);
+  }
+
+  return t;
+}
+
 // Unary ops
 // void _neg_backwards(tt *self) {
 //   if (!self->parents[0]->requires_grad) {
@@ -545,45 +583,6 @@ tt *tt_sum(tt *a, int axis) {
 //   for (uint64_t i = 0; i < a->data->size; i++) {
 //     float value = tstorage_getitem(a->data, i);
 //     tstorage_setitem(t->data, i, -value);
-//   }
-//
-//   return t;
-// }
-//
-// void _relu_backwards(tt *self) {
-//   if (!self->parents[0]->requires_grad) {
-//     return;
-//   }
-//
-//   tt *grads = tt_zeros(self->shape, false);
-//   for (size_t i = 0; i < self->parents[0]->size; i++) {
-//     if (self->parents[0]->buffer[i] > 0) {
-//       grads->buffer[i] = 1;
-//     }
-//   }
-//   tt *mul_grads = tt_mul(self->grads, grads);
-//   tt *acc_grads = tt_add(self->parents[0]->grads, mul_grads);
-//   tt_free(grads);
-//   tt_free(self->parents[0]->grads);
-//   tt_free(mul_grads);
-//   self->parents[0]->grads = acc_grads;
-// }
-//
-// tt *tt_relu(tt *a) {
-//   ttuple *copy = ttuple_copy(a->shape);
-//   tt **parents = NULL;
-//   if (a->requires_grad) {
-//     parents = (tt **)malloc(top_radix(RELU) * sizeof(tt *));
-//     parents[0] = a;
-//   }
-//
-//   tt *t = tt_zeros(copy, a->requires_grad);
-//   t->parents = parents;
-//   t->op = RELU;
-//   t->_backwards = &_relu_backwards;
-//
-//   for (uint64_t i = 0; i < a->size; i++) {
-//     t->buffer[i] = a->buffer[i] * (a->buffer[i] > 0);
 //   }
 //
 //   return t;

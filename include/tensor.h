@@ -84,17 +84,12 @@ void tt_print(tt *t);
 tt* tt_view(tt* tensor, tview* view);
 void tt_free(tt *t);
 
-// alu ops
+// ops
 tt *tt_add(tt *a, tt *b);
 tt *tt_neg(tt *a);
 tt *tt_mul(tt *a, tt *b);
-tt *tt_max(tt *a, tt *b);
-// reduce ops
+tt *tt_relu(tt *a);
 tt *tt_sum(tt *a, int axis);
-// movement ops
-tt *tt_permute(tt *t, ttuple *axes);
-tt *tt_expand(tt *a, ttuple *shape);
-tt *tt_reshape(tt *a, ttuple *new_shape);
 
 // computational graph
 typedef struct {
