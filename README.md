@@ -8,7 +8,6 @@ A small deep learning library.
 - [ ] backwards mode autograd
 - [ ] ops (convs, batchnorms, relu, linears, cce, maxpools)
 - [ ] adam optimizer
-- [ ] opencl backend
 
 ## Examples
 
