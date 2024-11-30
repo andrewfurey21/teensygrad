@@ -1,4 +1,4 @@
-#include "../include/teensygrad.h"
+#include "../include/tensor.h"
 #include "assert.h"
 
 void tsgd(toptimizer *optim) { // maybe just opt_params and net.

@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "stdarg.h"
-#include "../include/teensygrad.h"
+#include "../include/tensor.h"
 #include <stdint.h>
 
 #define MAX_ITEMS 4

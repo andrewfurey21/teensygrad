@@ -4,8 +4,8 @@
 #include "stdlib.h"
 #include "stdint.h"
 
-#ifndef _TEENSYGRAD_H
-#define _TEENSYGRAD_H
+#ifndef _TENSOR_H
+#define _TENSOR_H
 
 enum top { // need enough for: conv, batchnorm, maxpool, linear, relu
   NOOP = 0,

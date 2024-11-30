@@ -1,6 +1,6 @@
 #include "assert.h"
 #include "stdio.h"
-#include "../include/teensygrad.h"
+#include "../include/tensor.h"
 
 size_t top_radix(enum top op) {
     switch (op) {

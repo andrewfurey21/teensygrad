@@ -2,7 +2,7 @@
 
 DEBUG=1
 
-ALIB=libteensygrad.a
+ALIB=libtensor.a
 OBJDIR=./obj/
 SRCDIR=./src/
 
@@ -28,7 +28,7 @@ CFLAGS+=$(OPTS)
 OBJ=graph.o op.o optimizers.o tuple.o tensor.o
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
-DEPS = Makefile include/teensygrad.h
+DEPS = Makefile include/tensor.h
 
 all: $(EXECDIR) $(OBJDIR) $(ALIB) $(EXEC) $(DEPS)
 

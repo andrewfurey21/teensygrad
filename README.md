@@ -1,6 +1,8 @@
-# teensygrad
+# libtensor
 
-A small deep learning library.
+A small tensor library with autodifferentiation for deep learning.
+
+This library has no dependencies, it's written from scratch in C.
 
 ## Features
 

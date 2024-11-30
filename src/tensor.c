@@ -8,7 +8,7 @@
 #include "string.h"
 #include "time.h"
 
-#include "../include/teensygrad.h"
+#include "../include/tensor.h"
 #include <math.h>
 #include <stdint.h>
 

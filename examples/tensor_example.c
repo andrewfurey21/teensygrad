@@ -1,4 +1,4 @@
-#include "../include/teensygrad.h"
+#include "../include/tensor.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include <stdint.h>
