@@ -74,7 +74,7 @@ ttuple* ttuple_copy(ttuple* other) {
 
 bool ttuple_equal(ttuple* a, ttuple* b) {
     if (a->size != b->size) return false;
-    for (int i = 0; i < a->size || i < MAX_ITEMS; i++) {
+    for (int i = 0; i < a->size && i < MAX_ITEMS; i++) {
         if (a->items[i] != b->items[i]) return false;
     }
     return true;

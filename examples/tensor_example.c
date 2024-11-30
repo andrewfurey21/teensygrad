@@ -6,14 +6,26 @@
 
 int main(void) {
     srand(time(NULL));
-    ttuple* input_shape = ttuple_build(4, 2, 3, 2, 3);
-    tt* b = tt_linspace(input_shape, 0, 2*3*2*3, true);
+    ttuple* input_shape = ttuple_build(3, 2, 2, 3);
+    tt* a = tt_uniform(input_shape, 0, 2*2*3, true);
+    tt* b = tt_uniform(input_shape, 0, 2*2*3, true);
     
+    tt* c = tt_mul(a, b);
+    tt* d = tt_sum(c, -1);
+
+    tt_print(a);
     tt_print(b);
-    int axis = 2;
-    tt* sum = tt_sum(b, -1);
-    //printf("sum along axis %d:\n", axis);
-    tt_print(sum);
+    tt_print(c);
+    tt_print(d);
+    
+    tgraph* cg = tgraph_build(d);
+    tgraph_zeroed(cg);
+    tgraph_backprop(cg);
+
+    tt_print(a->grads);
+    tt_print(b->grads);
+    tt_print(c->grads);
+    tt_print(d->grads);
     
 
     //
