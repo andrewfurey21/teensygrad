@@ -11,8 +11,8 @@ int main(void) {
     
     tt_print(b);
     int axis = 2;
-    tt* sum = tt_sum(b, axis);
-    printf("sum along axis %d:\n", axis);
+    tt* sum = tt_sum(b, -1);
+    //printf("sum along axis %d:\n", axis);
     tt_print(sum);
     
 

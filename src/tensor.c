@@ -385,7 +385,7 @@ void _sum_backwards(tt *self) {
 // currently always keepdims, except for axis=-1
 // could seriously use some tests here
 tt *tt_sum(tt *a, int axis) {
-  assert(axis >= -1 && axis < a->view->shape->size);
+  assert(axis >= -1 && axis < (int)a->view->shape->size);
   ttuple *new_shape;
   if (axis == -1) {
     new_shape = ttuple_build(1, 1);
