@@ -6,28 +6,24 @@
 
 int main(void) {
     srand(time(NULL));
-    ttuple* input_shape = ttuple_build(3, 2, 2, 3);
-    tt* a = tt_uniform(input_shape, 0, 2*2*3, true);
-    tt* b = tt_uniform(input_shape, 0, 2*2*3, true);
-    
-    tt* c = tt_mul(a, b);
-    tt* d = tt_sum(c, -1);
 
+    //check summing with (2, 1, 1) or something with ones
+    ttuple* input_shape = ttuple_build(2, 4, 3);//make sure to free
+    tt* a = tt_linspace(input_shape, 0, 4*3, true);
+    // tt* b = tt_uniform(input_shape, 0, 2*2*3, true);
+
+    tt* b = tt_sum(a, 1);
+    
     tt_print(a);
     tt_print(b);
-    tt_print(c);
-    tt_print(d);
-    
-    tgraph* cg = tgraph_build(d);
-    tgraph_zeroed(cg);
-    tgraph_backprop(cg);
+
+    float buffer[4] = {0, 1, 2, 3};
+    b->grads = tt_from_buffer(b->grads->view->shape, buffer, false);
+
+    b->_backwards(b);
 
     tt_print(a->grads);
     tt_print(b->grads);
-    tt_print(c->grads);
-    tt_print(d->grads);
-    
-
     //
     // tt* inputs = tt_uniformint(input_shape, 0, 10, false);
     // tt_print(inputs);

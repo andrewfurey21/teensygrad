@@ -87,7 +87,6 @@ void tview_free(tview *view) {
   ttuple_free(view->shape);
   ttuple_free(view->strides);
   free(view);
-
 }
 
 tt *tt_zeros(ttuple *s, bool requires_grad) {
@@ -157,14 +156,14 @@ tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grad) {
 }
 
 // TODO: test please
-float tt_getindex(tt* self, ttuple *s) {
-  ttuple* self_shape = self->view->shape;
+float tt_getindex(tt *self, ttuple *s) {
+  ttuple *self_shape = self->view->shape;
   assert(s->size == self->view->shape->size);
   uint64_t index = 0;
   for (int i = 0; i < s->size; i++) {
     assert(s->items[i] < self_shape->items[i]);
-    uint64_t mul = 1; 
-    for (int j = i+1; j < s->size; j++) {
+    uint64_t mul = 1;
+    for (int j = i + 1; j < s->size; j++) {
       mul *= self_shape->items[j];
     }
     index += mul * s->items[i];
@@ -172,14 +171,14 @@ float tt_getindex(tt* self, ttuple *s) {
   return self->data->buffer[index];
 }
 
-void tt_setindex(tt* self, ttuple *s, float num) {
-  ttuple* self_shape = self->view->shape;
+void tt_setindex(tt *self, ttuple *s, float num) {
+  ttuple *self_shape = self->view->shape;
   assert(s->size == self->view->shape->size);
   uint64_t index = 0;
   for (int i = 0; i < s->size; i++) {
     assert(s->items[i] < self_shape->items[i]);
-    uint64_t mul = 1; 
-    for (int j = i+1; j < s->size; j++) {
+    uint64_t mul = 1;
+    for (int j = i + 1; j < s->size; j++) {
       mul *= self_shape->items[j];
     }
     index += mul * s->items[i];
@@ -267,6 +266,8 @@ void tt_print(tt *t) {
   if (t->requires_grad) {
     printf("  op: ");
     print_op_string(t->op);
+  } else {
+    printf("  NO GRADS\n");
   }
   printf("  values: [ ");
   for (int i = 0; i < t->data->size; i++) {
@@ -389,14 +390,67 @@ void _sum_backwards(tt *self) {
   if (!self->parents[0]->requires_grad) {
     return;
   }
-  // TODO: need to expand properly. loop through self->grads->data->buffer 
-  tt *expanded_grads = tt_fill(self->parents[0]->view->shape,
-                               self->grads->data->buffer[0], false);
-  tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
+  ttuple *unit_shape = ttuple_build(1, 1);
 
-  tt_free(self->parents[0]->grads);
-  tt_free(expanded_grads);
-  self->parents[0]->grads = acc_grads;
+  ttuple *self_shape = self->view->shape;
+  ttuple *par_shape = self->parents[0]->view->shape;
+  if (ttuple_equal(unit_shape, self_shape)) {
+    tt *expanded_grads =
+        tt_fill(par_shape, self->grads->data->buffer[0], false);
+    tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
+    tt_free(self->parents[0]->grads);
+    tt_free(expanded_grads);
+    self->parents[0]->grads = acc_grads;
+  } else {
+    int expand_axis = 0;
+    assert(self_shape->size == par_shape->size);
+
+    // TODO: i don't think this works if one of the dimensions was always 1
+    for (int i = 0; i < self_shape->size; i++) {
+      if (self_shape->items[i] == 1 && par_shape->items[i] != 1) {
+        expand_axis = i;
+        break;
+      }
+    }
+
+    tt *expanded_grads = tt_zeros(par_shape, false);
+    ttuple *current = ttuple_zeros(par_shape->size);
+
+    uint64_t along_axis = par_shape->items[expand_axis];
+    printf("along axis: %d\n", (int)along_axis);
+    printf("expand axis: %d\n", (int)expand_axis);
+    for (uint64_t i = 0; i < self->grads->data->size; i++) {
+      //expanding
+      for (uint64_t j = 0; j < along_axis; j++) {
+        ttuple *current_grads = ttuple_copy(current);
+        current_grads->items[expand_axis] = 0;
+        float num = tt_getindex(self->grads, current_grads);
+        tt_setindex(expanded_grads, current, num);
+        current->items[expand_axis]++;
+        ttuple_free(current_grads);
+      }
+
+      current->items[expand_axis] = 0;
+      //updating current (with expanded axis set to 0)
+      for (int k = current->size - 1; k >= 0; k--) {
+        if (k == expand_axis) {
+          continue;
+        }
+        current->items[k]++;
+        if (current->items[k] >= par_shape->items[k]) {
+          current->items[k] = 0;
+          continue;
+        }
+        break;
+      }
+    }
+
+    tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
+    tt_free(self->parents[0]->grads);
+    tt_free(expanded_grads);
+    self->parents[0]->grads = acc_grads;
+  }
+  ttuple_free(unit_shape);
 }
 
 // axis=-1 => sum up all elements
@@ -430,23 +484,24 @@ tt *tt_sum(tt *a, int axis) {
     }
     t->data->buffer[0] = sum;
   } else {
-    ttuple* stride = ttuple_zeros(a->view->shape->size);
+    ttuple *stride = ttuple_zeros(a->view->shape->size);
     stride->items[axis] = 1;
 
     uint64_t along_axis = a->view->shape->items[axis];
     uint64_t num_accumulate = ttuple_prod(a->view->shape) / along_axis;
-    ttuple* current = ttuple_zeros(a->view->shape->size);
+    ttuple *current = ttuple_zeros(a->view->shape->size);
     for (uint64_t i = 0; i < num_accumulate; i++) {
       float sum = 0.0f;
       for (uint64_t j = 0; j < along_axis; j++) {
         sum += tt_getindex(a, current);
         current->items[axis]++;
       }
-      current->items[axis]=0;
+      current->items[axis] = 0;
       tt_setindex(t, current, sum);
       // this looks kinda fucked but i think it works
-      for (int k = current->size-1; k >= 0; k--) {
-        if (k==axis) continue;
+      for (int k = current->size - 1; k >= 0; k--) {
+        if (k == axis)
+          continue;
         current->items[k]++;
         if (current->items[k] >= a->view->shape->items[k]) {
           current->items[k] = 0;
