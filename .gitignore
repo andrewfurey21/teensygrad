@@ -1,4 +1,5 @@
 *.a
 obj/*
 build/*
+test.py
 
