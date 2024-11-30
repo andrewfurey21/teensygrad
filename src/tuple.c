@@ -6,10 +6,10 @@
 #include "../include/teensygrad.h"
 #include <stdint.h>
 
-#define MAX_items 4
+#define MAX_ITEMS 4
 
 ttuple* ttuple_build(uint32_t size, ...) {
-    assert(MAX_items >= size);
+    assert(MAX_ITEMS >= size);
     assert(size > 0 && "Size must be positive");
     va_list ap;
 
@@ -20,10 +20,18 @@ ttuple* ttuple_build(uint32_t size, ...) {
 
     for (int i = 0; i < size; i++) {
         ret->items[i] = va_arg(ap, uint32_t);
-        //should there be a max items[i]?
-        assert(ret->items[i] > 0 && "Dimensions must be positive");
+        // assert(ret->items[i] > 0 && "Dimensions must be positive");
     }
     va_end(ap);
+    return ret;
+}
+
+ttuple* ttuple_zeros(uint32_t size) {
+    assert(MAX_ITEMS >= size);
+    assert(size > 0 && "Size must be positive");
+    ttuple* ret = (ttuple*)malloc(sizeof(ttuple));
+    ret->size = size;
+    ret->items = (int32_t*)calloc(size, sizeof(int32_t));
     return ret;
 }
 
@@ -37,7 +45,16 @@ ttuple* ttuple_ones(uint32_t size) {
     return ret;
 }
 
-uint64_t ttuple_mul(ttuple* s) {
+ttuple* ttuple_add(ttuple* a, ttuple* b) {
+    assert(a->size == b->size && "Cannot add tuples of different sizes");
+    ttuple* ret = ttuple_zeros(a->size);
+    for (uint32_t i = 0; i < a->size; i++) {
+        ret->items[i] = a->items[i] + b->items[i];
+    }
+    return ret;
+}
+
+uint64_t ttuple_prod(ttuple* s) {
     uint64_t size = 1;
     for (uint32_t i = 0; i < s->size; i++) {
         size *= s->items[i];
@@ -49,21 +66,19 @@ ttuple* ttuple_copy(ttuple* other) {
     ttuple* copy = (ttuple*)malloc(sizeof(ttuple));
     copy->size = other->size;
     copy->items = (int32_t*)malloc(sizeof(int32_t) * copy->size);
-    for (uint32_t i = 0; i < MAX_items || i < copy->size; i++) {
+    for (uint32_t i = 0; i < MAX_ITEMS || i < copy->size; i++) {
         copy->items[i] = other->items[i];
     }
     return copy;
 }
 
-
 bool ttuple_equal(ttuple* a, ttuple* b) {
     if (a->size != b->size) return false;
-    for (int i = 0; i < a->size || i < MAX_items; i++) {
+    for (int i = 0; i < a->size || i < MAX_ITEMS; i++) {
         if (a->items[i] != b->items[i]) return false;
     }
     return true;
 }
-
 
 void ttuple_free(ttuple* s) {
     free(s->items);
@@ -71,7 +86,7 @@ void ttuple_free(ttuple* s) {
 }
 
 void ttuple_print(ttuple* s) {
-    assert(s->size <= MAX_items && "Too many dimensions in tshape.");
+    assert(s->size <= MAX_ITEMS && "Too many dimensions in tshape.");
     printf("(");
     for (size_t i = 0; i < s->size; i++) {
         printf("%d", s->items[i]);
@@ -84,7 +99,7 @@ void ttuple_print(ttuple* s) {
 //     ttuple* permuted = ttuple_copy(shape);
 //     for (int i = 0; i < shape->size; i++) {
 //         int axis = axes->items[i];
-//         assert(axis >= 0 && axis <= MAX_items);
+//         assert(axis >= 0 && axis <= MAX_ITEMS);
 //         permuted->items[i] = shape->items[axis];
 //     }
 //     assert(ttuple_mul(permuted) == ttuple_mul(shape) && "Possibly repeated axis");
@@ -92,7 +107,7 @@ void ttuple_print(ttuple* s) {
 // }
 
 // bool tshape_duplicates(struct tshape* axes) {
-//     assert(axes->size <= MAX_items);
+//     assert(axes->size <= MAX_ITEMS);
 //     for (int i = 0; i < axes->size-1; i++) {
 //         for (int j = i+1; j < axes->size; j++) {
 //             if (axes->items[i] == axes->items[j]) return true;

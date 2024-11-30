@@ -90,7 +90,7 @@ void tview_free(tview *view) {
 }
 
 tt *tt_zeros(ttuple *s, bool requires_grad) {
-  uint64_t size = ttuple_mul(s);
+  uint64_t size = ttuple_prod(s);
   ttuple *copy = ttuple_copy(s);
 
   tstorage *data = tstorage_new(size);
@@ -127,7 +127,7 @@ tt *tt_ones(ttuple *s, bool requires_grad) {
 }
 
 tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grad) {
-  uint64_t size = ttuple_mul(s);
+  uint64_t size = ttuple_prod(s);
   tstorage *data = tstorage_from_buffer(size, buffer);
 
   tt *ret = (tt *)malloc(sizeof(tt));
@@ -153,6 +153,37 @@ tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grad) {
   ret->_backwards = NULL;
   ret->grads = grads;
   return ret;
+}
+
+// TODO: test please
+float tt_getindex(tt* self, ttuple *s) {
+  ttuple* self_shape = self->view->shape;
+  assert(s->size == self->view->shape->size);
+  uint64_t index = 0;
+  for (int i = 0; i < s->size; i++) {
+    assert(s->items[i] < self_shape->items[i]);
+    uint64_t mul = 1; 
+    for (int j = i+1; j < s->size; j++) {
+      mul *= self_shape->items[j];
+    }
+    index += mul * s->items[i];
+  }
+  return self->data->buffer[index];
+}
+
+void tt_setindex(tt* self, ttuple *s, float num) {
+  ttuple* self_shape = self->view->shape;
+  assert(s->size == self->view->shape->size);
+  uint64_t index = 0;
+  for (int i = 0; i < s->size; i++) {
+    assert(s->items[i] < self_shape->items[i]);
+    uint64_t mul = 1; 
+    for (int j = i+1; j < s->size; j++) {
+      mul *= self_shape->items[j];
+    }
+    index += mul * s->items[i];
+  }
+  self->data->buffer[index] = num;
 }
 
 tt *tt_fill(ttuple *s, float fill_value, bool requires_grad) {
@@ -225,8 +256,6 @@ void tt_to_n(struct tt *t, float n) {
   }
 }
 
-tt* tt_view(tstorage* storage, tview* view);
-
 void tt_print(tt *t) {
   printf("tensor: \n  ");
   if (!t) {
@@ -257,12 +286,161 @@ void tt_free(tt *t) {
   free(t);
 }
 
-// -----------------------------------------------------------
-//
-// lower level Ops + derivatives
-// TODO: use storage abstraction!
-// TODO: move into kernels.c or something
-//
+void _add_backwards(tt *self) {
+  if (self->parents[0]->requires_grad) {
+    // grads get created if requires_grad, so not checking.
+    tt *grads_0 = tt_add(self->grads, self->parents[0]->grads);
+    tt_free(self->parents[0]->grads);
+    self->parents[0]->grads = grads_0;
+  }
+
+  if (self->parents[1]->requires_grad) {
+    tt *grads_1 = tt_add(self->grads, self->parents[1]->grads);
+    tt_free(self->parents[1]->grads);
+    self->parents[1]->grads = grads_1;
+  }
+}
+
+tt *tt_add(tt *a, tt *b) {
+  assert(ttuple_equal(a->view->shape, b->view->shape) &&
+         "Tensors are not the same shape.");
+  ttuple *copy = ttuple_copy(a->view->shape);
+  bool requires_grad = a->requires_grad || b->requires_grad;
+
+  tt **parents = NULL;
+  if (requires_grad) {
+    parents = (tt **)malloc(top_radix(ADD) * sizeof(tt *));
+    parents[0] = a;
+    parents[1] = b;
+  }
+
+  tt *t = tt_zeros(copy, requires_grad);
+  t->parents = parents;
+  t->op = ADD;
+  t->_backwards = &_add_backwards;
+  for (uint64_t i = 0; i < a->data->size; i++) {
+    t->data->buffer[i] = a->data->buffer[i] + b->data->buffer[i];
+  }
+  return t;
+}
+
+void _mul_backwards(tt *self) {
+  if (self->parents[0]->requires_grad) {
+    tt *grads_0 = tt_mul(self->grads, self->parents[1]);
+    tt *acc_grads_0 = tt_add(grads_0, self->parents[0]->grads);
+    tt_free(self->parents[0]->grads);
+    tt_free(grads_0);
+    self->parents[0]->grads = acc_grads_0;
+  }
+
+  if (self->parents[1]->requires_grad) {
+    tt *grads_1 = tt_mul(self->grads, self->parents[0]);
+    tt *acc_grads_1 = tt_add(grads_1, self->parents[1]->grads);
+    tt_free(self->parents[1]->grads);
+    tt_free(grads_1);
+    self->parents[1]->grads = acc_grads_1;
+  }
+}
+
+tt *tt_mul(tt *a, tt *b) {
+  assert(ttuple_equal(a->view->shape, b->view->shape) &&
+         "Tensors are not the same shape.");
+  ttuple *copy = ttuple_copy(a->view->shape);
+
+  bool requires_grad = a->requires_grad || b->requires_grad;
+  tt **parents = NULL;
+  if (requires_grad) {
+    parents = (tt **)malloc(top_radix(MUL) * sizeof(tt *));
+    parents[0] = a;
+    parents[1] = b;
+  }
+
+  tt *t = tt_zeros(copy, requires_grad);
+  t->parents = parents;
+  t->op = MUL;
+  t->_backwards = &_mul_backwards;
+
+  for (uint64_t i = 0; i < a->data->size; i++) {
+    t->data->buffer[i] = a->data->buffer[i] * b->data->buffer[i];
+  }
+
+  return t;
+}
+
+void _sum_backwards(tt *self) {
+  if (!self->parents[0]->requires_grad) {
+    return;
+  }
+  tt *expanded_grads = tt_fill(self->parents[0]->view->shape,
+                               self->grads->data->buffer[0], false);
+  tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
+
+  tt_free(self->parents[0]->grads);
+  tt_free(expanded_grads);
+
+  self->parents[0]->grads = acc_grads;
+}
+
+// axis=-1 => sum up all elements
+// currently always keepdims, except for axis=-1
+// could seriously use some tests here
+tt *tt_sum(tt *a, int axis) {
+  assert(axis >= -1 && axis < a->view->shape->size);
+  ttuple *new_shape;
+  if (axis == -1) {
+    new_shape = ttuple_build(1, 1);
+  } else {
+    new_shape = ttuple_copy(a->view->shape);
+    new_shape->items[axis] = 1;
+  }
+
+  tt **parents = NULL;
+  if (a->requires_grad) {
+    parents = (tt **)malloc(top_radix(SUM_REDUCE) * sizeof(tt *));
+    parents[0] = a;
+  }
+
+  tt *t = tt_zeros(new_shape, a->requires_grad);
+  t->parents = parents;
+  t->op = SUM_REDUCE;
+  t->_backwards = &_sum_backwards;
+
+  if (axis == -1) {
+    double sum = 0.0f;
+    for (uint64_t i = 0; i < a->data->size; i++) {
+      sum += a->data->buffer[i];
+    }
+    t->data->buffer[0] = sum;
+  } else {
+    ttuple* stride = ttuple_zeros(a->view->shape->size);
+    stride->items[axis] = 1;
+
+    uint64_t along_axis = a->view->shape->items[axis];
+    uint64_t num_accumulate = ttuple_prod(a->view->shape) / along_axis;
+    ttuple* current = ttuple_zeros(a->view->shape->size);
+    for (uint64_t i = 0; i < num_accumulate; i++) {
+      float sum = 0.0f;
+      for (uint64_t j = 0; j < along_axis; j++) {
+        sum += tt_getindex(a, current);
+        current->items[axis]++;
+      }
+      current->items[axis]=0;
+      tt_setindex(t, current, sum);
+      // this looks kinda fucked but i think it works
+      for (int k = current->size-1; k >= 0; k--) {
+        if (k==axis) continue;
+        current->items[k]++;
+        if (current->items[k] >= a->view->shape->items[k]) {
+          current->items[k] = 0;
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  return t;
+}
+
 // Unary ops
 // void _neg_backwards(tt *self) {
 //   if (!self->parents[0]->requires_grad) {
@@ -338,128 +516,9 @@ void tt_free(tt *t) {
 //   return t;
 // }
 // // Binary ops
-// void _add_backwards(tt *self) {
-//   if (self->parents[0]->requires_grad) {
-//     // self->grads are the grads, must accumulate.
-//     tt *grads_0 = tt_add(self->grads, self->parents[0]->grads);
-//     tt_free(self->parents[0]->grads);
-//     self->parents[0]->grads = grads_0;
-//   }
 //
-//   if (self->parents[1]->requires_grad) {
-//     tt *grads_1 = tt_add(self->grads, self->parents[1]->grads);
-//     tt_free(self->parents[1]->grads);
-//     self->parents[1]->grads = grads_1;
-//   }
-// }
-//
-// tt *tt_add(tt *a, tt *b) {
-//   assert(ttuple_equal(a->shape, b->shape) && "Tensors are not the same
-//   shape."); ttuple *copy = ttuple_copy(a->shape); bool requires_grad =
-//   a->requires_grad || b->requires_grad;
-//
-//   tt **parents = NULL;
-//   // irrelevant if not requires_grad
-//   if (requires_grad) {
-//     parents = (tt **)malloc(top_radix(ADD) * sizeof(tt *));
-//     parents[0] = a;
-//     parents[1] = b;
-//   }
-//
-//   tt *t = tt_zeros(copy, requires_grad);
-//   t->parents = parents;
-//   t->op = ADD;
-//   t->_backwards = &_add_backwards;
-//   for (uint64_t i = 0; i < a->size; i++) {
-//     t->buffer[i] = a->buffer[i] + b->buffer[i];
-//   }
-//
-//   return t;
-// }
-//
-// void _mul_backwards(tt *self) {
-//   if (self->parents[0]->requires_grad) {
-//     tt *grads_0 = tt_mul(self->grads, self->parents[1]);
-//     tt *acc_grads_0 = tt_add(grads_0, self->parents[0]->grads);
-//     tt_free(self->parents[0]->grads);
-//     tt_free(grads_0);
-//     self->parents[0]->grads = acc_grads_0;
-//   }
-//
-//   if (self->parents[1]->requires_grad) {
-//     tt *grads_1 = tt_mul(self->grads, self->parents[0]);
-//     tt *acc_grads_1 = tt_add(grads_1, self->parents[1]->grads);
-//     tt_free(self->parents[1]->grads);
-//     tt_free(grads_1);
-//     self->parents[1]->grads = acc_grads_1;
-//   }
-// }
-//
-// tt *tt_mul(tt *a, tt *b) {
-//   assert(ttuple_equal(a->shape, b->shape) && "Tensors are not the same
-//   shape."); ttuple *copy = ttuple_copy(a->shape);
-//
-//   bool requires_grad = a->requires_grad || b->requires_grad;
-//   tt **parents = NULL;
-//   if (requires_grad) {
-//     parents = (tt **)malloc(top_radix(MUL) * sizeof(tt *));
-//     parents[0] = a;
-//     parents[1] = b;
-//   }
-//
-//   tt *t = tt_zeros(copy, requires_grad);
-//   t->parents = parents;
-//   t->op = MUL;
-//   t->_backwards = &_mul_backwards;
-//
-//   for (uint64_t i = 0; i < a->size; i++) {
-//     t->buffer[i] = a->buffer[i] * b->buffer[i];
-//   }
-//
-//   return t;
-// }
 //
 // // Reduce ops
-// void _sum_backwards(tt *self) {
-//   if (!self->parents[0]->requires_grad) {
-//     return;
-//   }
-//   tt *expanded_grads =
-//       tt_fill(self->parents[0]->shape, self->grads->buffer[0], false);
-//   tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
-//
-//   tt_free(self->parents[0]->grads);
-//   tt_free(expanded_grads);
-//
-//   self->parents[0]->grads = acc_grads;
-// }
-//
-// tt *tt_sum(tt *a, ttuple *axes) {
-//   assert(!ttuple_duplicates(axes));
-//   uint32_t new_size = axes->size - a->shape->size;
-//   assert(new_size >= 0);
-//   // new_size = 0 means array of size 1 (scalar)
-//   ttuple *new_shape = ttuple_build(1, 1);
-//   tt **parents = NULL;
-//   if (a->requires_grad) {
-//     parents = (tt **)malloc(top_radix(SUM_REDUCE) * sizeof(tt *));
-//     parents[0] = a;
-//   }
-//
-//   tt *t = tt_zeros(new_shape, a->requires_grad);
-//   t->parents = parents;
-//   t->op = SUM_REDUCE;
-//   t->_backwards = &_sum_backwards;
-//
-//   double sum = 0.0f;
-//   for (uint64_t i = 0; i < a->size; i++) {
-//     sum += a->buffer[i];
-//   }
-//
-//   t->buffer[0] = sum;
-//
-//   return t;
-// }
 //
 // // Movement ops
 // // Permute
@@ -550,8 +609,3 @@ void tt_free(tt *t) {
 //   return t;
 // }
 // TODO: padding also
-//
-// -----------------------------------------------------------
-//
-// This is where higher level ops would go, like convs, batchnorms and maxpools
-// maybe have lower level ops inside there own file.

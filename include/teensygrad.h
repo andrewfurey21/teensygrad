@@ -27,8 +27,10 @@ typedef struct {
 } ttuple;
 
 ttuple *ttuple_build(uint32_t size, ...);
+ttuple* ttuple_zeros(uint32_t size);
 ttuple *ttuple_ones(uint32_t size);
-uint64_t ttuple_mul(ttuple *s);
+ttuple* ttuple_add(ttuple *a, ttuple *b);
+uint64_t ttuple_prod(ttuple *s);
 ttuple *ttuple_copy(ttuple *other);
 bool ttuple_equal(ttuple *a, ttuple *b);
 void ttuple_free(ttuple *s);
@@ -68,6 +70,8 @@ struct tt {
 tt *tt_zeros(ttuple *s, bool requires_grad);
 tt *tt_ones(ttuple *s, bool requires_grad);
 tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grads);
+float tt_getindex(tt* self, ttuple *s);
+void tt_setindex(tt* self, ttuple *s, float num);
 tt *tt_fill(ttuple *s, float fill_value, bool requires_grad);
 tt *tt_linspace(ttuple *s, float min, float max, bool requires_grad);
 tt *tt_uniform(ttuple *s, float min, float max, bool requires_grad);
@@ -86,7 +90,7 @@ tt *tt_neg(tt *a);
 tt *tt_mul(tt *a, tt *b);
 tt *tt_max(tt *a, tt *b);
 // reduce ops
-tt *tt_sum(tt *a, ttuple *axes);
+tt *tt_sum(tt *a, int axis);
 // movement ops
 tt *tt_permute(tt *t, ttuple *axes);
 tt *tt_expand(tt *a, ttuple *shape);

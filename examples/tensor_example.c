@@ -6,15 +6,15 @@
 
 int main(void) {
     srand(time(NULL));
-    ttuple* input_shape = ttuple_build(3, 4, 3, 2);
-    tt* a= tt_ones(input_shape, true);
-    tt* b= tt_uniform(input_shape, 0, 10, true);
-
-    tt_print(a);
+    ttuple* input_shape = ttuple_build(4, 2, 3, 2, 3);
+    tt* b = tt_linspace(input_shape, 0, 2*3*2*3, true);
+    
     tt_print(b);
-
-    tt_free(a);
-    tt_free(b);
+    int axis = 2;
+    tt* sum = tt_sum(b, axis);
+    printf("sum along axis %d:\n", axis);
+    tt_print(sum);
+    
 
     //
     // tt* inputs = tt_uniformint(input_shape, 0, 10, false);
