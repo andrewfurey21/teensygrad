@@ -2,7 +2,6 @@
 #include "stdbool.h"
 #include "stdint.h"
 #include "stdlib.h"
-#include "stdint.h"
 
 #ifndef _TENSOR_H
 #define _TENSOR_H
@@ -27,9 +26,9 @@ typedef struct {
 } ttuple;
 
 ttuple *ttuple_build(uint32_t size, ...);
-ttuple* ttuple_zeros(uint32_t size);
+ttuple *ttuple_zeros(uint32_t size);
 ttuple *ttuple_ones(uint32_t size);
-ttuple* ttuple_add(ttuple *a, ttuple *b);
+ttuple *ttuple_add(ttuple *a, ttuple *b);
 uint64_t ttuple_prod(ttuple *s);
 ttuple *ttuple_copy(ttuple *other);
 bool ttuple_equal(ttuple *a, ttuple *b);
@@ -70,8 +69,8 @@ struct tt {
 tt *tt_zeros(ttuple *s, bool requires_grad);
 tt *tt_ones(ttuple *s, bool requires_grad);
 tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grads);
-float tt_getindex(tt* self, ttuple *s);
-void tt_setindex(tt* self, ttuple *s, float num);
+float tt_getindex(tt *self, ttuple *s);
+void tt_setindex(tt *self, ttuple *s, float num);
 tt *tt_fill(ttuple *s, float fill_value, bool requires_grad);
 tt *tt_linspace(ttuple *s, float min, float max, bool requires_grad);
 tt *tt_uniform(ttuple *s, float min, float max, bool requires_grad);
@@ -81,7 +80,7 @@ tt *tt_copy(tt *original, bool requires_grad);
 void tt_to_zeros(tt *t);
 void tt_to_n(tt *t, float n);
 void tt_print(tt *t);
-tt* tt_view(tt* tensor, tview* view);
+tt *tt_view(tt *tensor, tview *view);
 void tt_free(tt *t);
 
 // ops
@@ -90,6 +89,7 @@ tt *tt_neg(tt *a);
 tt *tt_mul(tt *a, tt *b);
 tt *tt_relu(tt *a);
 tt *tt_sum(tt *a, int axis);
+tt *tt_matmul(tt *a, tt *b);
 
 // computational graph
 typedef struct {
@@ -117,8 +117,8 @@ struct toptimizer {
 };
 
 toptimizer *toptimizer_build(tt **params, uint64_t size,
-                                    toptimizer_params *opt_params,
-                                    void (*step)(toptimizer *));
+                             toptimizer_params *opt_params,
+                             void (*step)(toptimizer *));
 void toptimizer_free(toptimizer *topt);
 
 // optimization steps

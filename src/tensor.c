@@ -552,6 +552,12 @@ tt *tt_relu(tt *a) {
   return t;
 }
 
+void _matmul_backwards(tt *self) {}
+
+tt *tt_matmul(tt *a, tt *b) {
+  
+}
+
 // Unary ops
 // void _neg_backwards(tt *self) {
 //   if (!self->parents[0]->requires_grad) {
