@@ -7,10 +7,10 @@
 #include "stdlib.h"
 #include "string.h"
 #include "time.h"
-
-#include "../include/tensor.h"
 #include <math.h>
 #include <stdint.h>
+
+#include "../include/tensor.h"
 
 tstorage *tstorage_new(uint64_t buffer_length) {
   float *buffer = (float *)calloc(buffer_length, sizeof(float));
@@ -552,10 +552,34 @@ tt *tt_relu(tt *a) {
   return t;
 }
 
-void _matmul_backwards(tt *self) {}
+// Reshape
+void _reshape_backwards(tt *self) {
+  if (!self->parents[0]->requires_grad)
+    return;
+  tt *grads = tt_reshape(self->grads, self->parents[0]->view->shape);
+  tt *acc_grads = tt_add(grads, self->parents[0]->grads);
+  free(grads);
+  self->parents[0]->grads = acc_grads;
+}
 
-tt *tt_matmul(tt *a, tt *b) {
-  
+tt *tt_reshape(tt *a, ttuple *new_shape) {
+  ttuple *new_shape_copy = ttuple_copy(new_shape);
+  assert(ttuple_prod(new_shape) == ttuple_prod(a->view->shape));
+  tt **parents = NULL;
+  tt *reshaped_grads = NULL;
+  if (a->requires_grad) {
+    parents = (tt **)malloc(top_radix(RESHAPE) * sizeof(tt *));
+    parents[0] = a;
+    reshaped_grads = tt_reshape(a->grads, new_shape_copy);
+  }
+  tt *t = tt_copy(a, a->requires_grad);
+  free(t->grads);
+  t->view->shape = new_shape_copy;
+  t->parents = parents;
+  t->op = RESHAPE;
+  t->_backwards = &_reshape_backwards;
+  t->grads = reshaped_grads;
+  return t;
 }
 
 // Unary ops
@@ -654,36 +678,3 @@ tt *tt_matmul(tt *a, tt *b) {
 //
 //   return expanded_tensor;
 // }
-//
-// // Reshape
-// void _reshape_backwards(tt *self) {
-//   if (!self->parents[0]->requires_grad) {
-//     return;
-//   }
-//   tt *grads = tt_reshape(self->grads, self->parents[0]->shape);
-//   tt *acc_grads = tt_add(grads, self->parents[0]->grads);
-//
-//   free(grads);
-//   self->parents[0]->grads = acc_grads;
-// }
-//
-// tt *tt_reshape(tt *a, ttuple *new_shape) {
-//   ttuple *new_shape_copy = ttuple_copy(new_shape);
-//   assert(buflen(new_shape) == buflen(a->shape));
-//   tt **parents = NULL;
-//   tt *reshaped_grads = NULL;
-//   if (a->requires_grad) {
-//     parents = (tt **)malloc(top_radix(RESHAPE) * sizeof(tt *));
-//     parents[0] = a;
-//     reshaped_grads = tt_reshape(a->grads, new_shape_copy);
-//   }
-//   tt *t = tt_copy(a, a->requires_grad);
-//   free(t->grads);
-//   t->shape = new_shape_copy;
-//   t->parents = parents;
-//   t->op = RESHAPE;
-//   t->_backwards = &_reshape_backwards;
-//   t->grads = reshaped_grads;
-//   return t;
-// }
-// TODO: padding also

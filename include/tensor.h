@@ -85,11 +85,10 @@ void tt_free(tt *t);
 
 // ops
 tt *tt_add(tt *a, tt *b);
-tt *tt_neg(tt *a);
 tt *tt_mul(tt *a, tt *b);
-tt *tt_relu(tt *a);
 tt *tt_sum(tt *a, int axis);
-tt *tt_matmul(tt *a, tt *b);
+tt *tt_relu(tt *a);
+tt *tt_reshape(tt *a, ttuple *new_shape);
 
 // computational graph
 typedef struct {
@@ -101,7 +100,6 @@ typedef struct {
 tgraph *tgraph_build(tt *x);
 void tgraph_free(tgraph *net);
 void tgraph_zeroed(tgraph *net);
-// backprop
 void tgraph_backprop(tgraph *net);
 
 // nn
