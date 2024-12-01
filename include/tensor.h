@@ -6,9 +6,9 @@
 #ifndef _TENSOR_H
 #define _TENSOR_H
 
-enum top { // need enough for: conv, batchnorm, maxpool, linear, relu
+enum top { // need enough for: conv, batchnorm, maxpool, linear
   NOOP = 0,
-  RELU, // TODO: remove, use min/max instead.
+  RELU,
   NEG,
   SUM_REDUCE,
   RESHAPE,
@@ -89,6 +89,7 @@ tt *tt_mul(tt *a, tt *b);
 tt *tt_sum(tt *a, int axis);
 tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
+tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
 
 // computational graph
 typedef struct {

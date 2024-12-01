@@ -15,13 +15,13 @@ My approach was building a small set of base operations that can be used to buil
 - [x] tensor
 - [x] backwards mode autodifferentiation
 - [ ] ops
-    - [x] add (with broadcasting)
-    - [x] mul (with broadcasting)
+    - [x] add
+    - [x] mul
     - [x] sum along an axis
     - [x] relu
-    - [ ] reshape
+    - [x] reshape
     - [ ] expand
-    - [ ] matmul (indirectly, using reshape, expand, mul and sum)
+    - [ ] matmul/dot (indirectly, using reshape, expand, mul and sum)
     - [ ] flatten
     - [ ] max pool
     - [ ] convolutions
@@ -83,4 +83,6 @@ Convolutions are done manually however.
 
 ## future ideas
 
-- different backends (opencl/vulkan, cuda, metal, avx/sse)
+- python bindings
+- different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
+- other convolution implementations (singular value decomposition, FFT, winograd)

@@ -267,7 +267,8 @@ void tt_print(tt *t) {
     printf("  op: ");
     print_op_string(t->op);
   } else {
-    // TODO: if not requires grad, maybe check where it came from, like grad of mul or something
+    // TODO: if not requires grad, maybe check where it came from, like grad of
+    // mul or something
     printf("  NO GRADS\n");
   }
   printf("  values: [ ");
@@ -406,7 +407,8 @@ void _sum_backwards(tt *self) {
     int expand_axis = 0;
     assert(self_shape->size == par_shape->size);
 
-    // TODO: i don't think this works if one of the dimensions was always 1
+    // TODO: i don't think this works if one of the dimensions was always 1.
+    // make sure to check, especially if bs=1
     for (int i = 0; i < self_shape->size; i++) {
       if (self_shape->items[i] == 1 && par_shape->items[i] != 1) {
         expand_axis = i;
@@ -415,11 +417,11 @@ void _sum_backwards(tt *self) {
     }
 
     tt *expanded_grads = tt_zeros(par_shape, false);
-    ttuple *current = ttuple_zeros(par_shape->size);
 
+    ttuple *current = ttuple_zeros(par_shape->size);
     uint64_t along_axis = par_shape->items[expand_axis];
     for (uint64_t i = 0; i < self->grads->data->size; i++) {
-      //expanding
+      // expanding
       for (uint64_t j = 0; j < along_axis; j++) {
         ttuple *current_grads = ttuple_copy(current);
         current_grads->items[expand_axis] = 0;
@@ -430,7 +432,7 @@ void _sum_backwards(tt *self) {
       }
 
       current->items[expand_axis] = 0;
-      //updating current (with expanded axis set to 0)
+      // updating current (with expanded axis set to 0)
       for (int k = current->size - 1; k >= 0; k--) {
         if (k == expand_axis) {
           continue;
@@ -570,6 +572,8 @@ tt *tt_reshape(tt *a, ttuple *new_shape) {
   if (a->requires_grad) {
     parents = (tt **)malloc(top_radix(RESHAPE) * sizeof(tt *));
     parents[0] = a;
+    // TODO: shouldn't op be RESHAPE of grad then? why isn't it? it shouldn't be
+    // anyways.
     reshaped_grads = tt_reshape(a->grads, new_shape_copy);
   }
   tt *t = tt_copy(a, a->requires_grad);
@@ -582,7 +586,74 @@ tt *tt_reshape(tt *a, ttuple *new_shape) {
   return t;
 }
 
-// Unary ops
+// Expand
+// basically forwards sum
+void _expand_backwards(tt *self) {
+  // sum
+}
+
+// currently, must expand, cannot contract.
+// can expand axis where dim>=1
+// basically backwards sum
+// follows broadcasting rules, cannot expand dim that isn't 1
+// TODO: sum and expand could use refactoring.
+// TODO: rename a/s in function parameters to original_tensor, shape, etc.
+// TODO: maybe rename backwards functions to like tensor_sum_backwards (not in
+// header file)
+// TODO: get better at valgrind and find memory leaks etc.
+tt *tt_expand(tt *original_tensor, uint64_t axis, uint64_t factor) {
+  ttuple *new_shape = ttuple_copy(original_tensor->view->shape);
+  assert(axis >= 0 && axis < new_shape->size &&
+         "Axis to expand is out of range.");
+  assert(factor > 0 && "Expanding factor must be greater than 0");
+  assert(new_shape->items[axis] == 1 && "Cannot expand [axis]!=1");
+
+  // calculate new shape here
+  new_shape->items[axis] *= factor; // TODO: check overflows.
+
+  tt **parents = NULL;
+  if (original_tensor->requires_grad) {
+    parents = (tt **)malloc(top_radix(EXPAND) * sizeof(tt *));
+    parents[0] = original_tensor;
+  }
+
+  tt *expanded_tensor = tt_zeros(new_shape, original_tensor->requires_grad);
+  expanded_tensor->parents = parents;
+  expanded_tensor->op = EXPAND;
+  expanded_tensor->_backwards = &_expand_backwards;
+
+  // expand here
+  ttuple *expanded_index = ttuple_zeros(expanded_tensor->view->shape->size);
+  uint64_t along_axis = new_shape->items[axis];
+
+  for (uint64_t i = 0; i < expanded_tensor->data->size; i++) {
+    // expanding (like _sum_backwards)
+    for (uint64_t j = 0; j < along_axis; j++) {
+      ttuple *original_index= ttuple_copy(expanded_index);
+      original_index->items[axis] = 0;
+      float num = tt_getindex(original_tensor, original_index);
+      tt_setindex(expanded_tensor, expanded_index, num);
+      expanded_index->items[axis]++;
+      ttuple_free(original_index);
+    }
+    expanded_index->items[axis] = 0;
+    // updating current (with expanded axis set to 0)
+    for (int k = expanded_index->size - 1; k >= 0; k--) {
+      if (k == axis) {
+        continue;
+      }
+      expanded_index->items[k]++;
+      if (expanded_index->items[k] >= original_tensor->view->shape->items[k]) {
+        expanded_index->items[k] = 0;
+        continue;
+      }
+      break;
+    }
+  }
+  return expanded_tensor;
+}
+
+// might need for adam/optimizing weights
 // void _neg_backwards(tt *self) {
 //   if (!self->parents[0]->requires_grad) {
 //     return;
@@ -614,67 +685,5 @@ tt *tt_reshape(tt *a, ttuple *new_shape) {
 //     float value = tstorage_getitem(a->data, i);
 //     tstorage_setitem(t->data, i, -value);
 //   }
-//
 //   return t;
-// }
-// // Binary ops
-//
-//
-// // Reduce ops
-//
-// // Movement ops
-// // Permute
-// // void _permute_backwards( tt* self) {
-// //
-// // }
-// //
-// //  tt* tt_permute( tt* t,  ttuple* axes) {
-// //     assert(t->shape->size == axes->size);
-// //      tt* tensor_copy = tt_copy(t, t->requires_grad);
-// //      ttuple* permuted_shape = ttuple_permute(t->shape, axes);
-// //     uint64_t buf_size = buflen(tensor_copy->shape);
-// //
-// //     for (uint64_t i = 0; i < buf_size; i++) {
-// //         size_t new_index = 0;
-// //         for (int j = 0; j < axes->size; j++) {
-// //             uint32_t shape_coord = permuted_shape->dims[j];
-// //             uint32_t axis = axes->dims[i];
-// //             uint32_t old_coord =
-// //             new_index += axis*shape_coord*old_coord;
-// //         }
-// //         tensor_copy->buffer[new_index] = t->buffer[i];
-// //
-// //     }
-// //     free(tensor_copy->shape);
-// //     tensor_copy->shape = permuted_shape;
-// //     return tensor_copy;
-// // }
-//
-// // Expand
-// void _expand_backwards(tt *self) {}
-//
-// tt *tt_expand(tt *a, ttuple *shape) {
-//   int diff = shape->size - a->shape->size;
-//   assert(diff >= 0 && "shape must have higher dimensions");
-//   tt **parents = NULL;
-//
-//   for (int i = 0; i < a->shape->size; i++) {
-//     assert(shape->dims[i + diff] == a->shape->dims[i]);
-//   }
-//   tt *expanded_tensor = tt_zeros(shape, a->requires_grad);
-//
-//   for (uint32_t i = 0; i < expanded_tensor->size; i++) {
-//     expanded_tensor->buffer[i] = a->buffer[i % a->size];
-//   }
-//
-//   if (a->requires_grad) {
-//     parents = (tt **)malloc(top_radix(EXPAND) * sizeof(tt *));
-//     parents[0] = a;
-//   }
-//
-//   expanded_tensor->parents = parents;
-//   expanded_tensor->_backwards = &_expand_backwards;
-//   expanded_tensor->op = EXPAND;
-//
-//   return expanded_tensor;
 // }

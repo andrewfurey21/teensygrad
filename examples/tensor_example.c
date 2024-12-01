@@ -4,45 +4,40 @@
 #include <stdint.h>
 #include <time.h>
 
+// TODO: encapsulating ops with functions is broken, i dont think gradients flow correcly.
+// TODO: check summing with (2, 1, 1) or something with ones
+// TODO: get name of linspace/arange correct
+
+// TODO: get this working correctly, compare with proper tinygrad/pytorch impl
+
 int main(void) {
     srand(time(NULL));
 
-    //check summing with (2, 1, 1) or something with ones
-    ttuple* input_shape = ttuple_build(2, 4, 6);//make sure to free
-    tt* a = tt_linspace(input_shape, -4*6, 4*6, true);
-    tt* b = tt_uniform(input_shape, -10, 10, true);
+    ttuple* a_shape= ttuple_build(2, 4, 3);
+    tt* a = tt_linspace(a_shape, 0, 3*4, false);
 
-    tt* mul = tt_mul(a, b);
-    tt* sum = tt_sum(mul, 1);
-
-    tt* relu = tt_relu(sum);
-
-    ttuple* new_shape = ttuple_build(3, 2, 1, 2);
-    tt* reshaped = tt_reshape(relu, new_shape);
-
-    tt* sum2= tt_sum(reshaped, 2);
-
-    tt* total = tt_sum(sum2, -1);
+    ttuple* b_shape= ttuple_build(2, 5, 4);
+    tt* b = tt_linspace(b_shape, 0, 5*4, false);
 
     tt_print(a);
     tt_print(b);
-    tt_print(mul);
-    tt_print(sum);
-    tt_print(relu);
-    tt_print(reshaped);
-    tt_print(sum2);
-    tt_print(total);
 
-    tgraph* cg = tgraph_build(total);
-    tgraph_zeroed(cg);
-    tgraph_backprop(cg);
 
-    tt_print(a->grads);
-    tt_print(b->grads);
-    tt_print(mul->grads);
-    tt_print(sum->grads);
-    tt_print(relu->grads);
-    tt_print(reshaped->grads);
-    tt_print(sum2->grads);
-    tt_print(total->grads);
+    ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
+    tt* reshape_a = tt_reshape(a, reshape_a_shape);
+
+    ttuple* reshape_b_shape = ttuple_build(3, 5, 4, 1);
+    tt* reshape_b = tt_reshape(b, reshape_b_shape);
+
+    tt* expand_a = tt_expand(reshape_a, 0, 5);
+    tt* expand_b = tt_expand(reshape_b, 2, 3);
+
+    tt* mul = tt_mul(expand_a, expand_b);
+
+    tt* dot = tt_sum(mul, 1);
+
+    ttuple* reshaped_dot_shape = ttuple_build(2, 5, 3);
+    tt* reshaped_dot = tt_reshape(dot, reshaped_dot_shape);
+
+    tt_print(reshaped_dot);
 }
