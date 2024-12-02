@@ -1,6 +1,6 @@
 # libtensor
 
-<!--  TODO: Show image of generated graph  -->
+<!--  TODO: Show image of generated graph + mnist example  -->
 
 I built a small tensor library with automatic differentiation for deep learning.
 
@@ -20,9 +20,9 @@ My approach was building a small set of base operations that can be used to buil
     - [x] sum along an axis
     - [x] relu
     - [x] reshape
-    - [ ] expand
-    - [ ] matmul/dot (indirectly, using reshape, expand, mul and sum)
-    - [ ] flatten
+    - [x] expand
+    - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
+    - [ ] flatten (just a reshape)
     - [ ] max pool
     - [ ] convolutions
     - [ ] batch norm (indirectly, using add and mul)
@@ -35,19 +35,19 @@ My approach was building a small set of base operations that can be used to buil
 Here's a mini example of working with tensors to compute gradients.
 
 ```c
-    ttuple* input_shape = ttuple_build(2, 4, 6); // shape (4, 6)
-    tt* a = tt_uniform(input_shape, -10, 10, true);
-    tt* b = tt_uniform(input_shape, -10, 10, true);
-    tt* a_b_mul = tt_mul(a, b);
-    tt* sum = tt_sum(a_b_mul, -1);
-    tgraph* comp_graph = tgraph_build(sum);
-    tgraph_zeroed(comp_graph);
-    tgraph_backprop(comp_graph);
+ttuple* input_shape = ttuple_build(2, 4, 6); // shape (4, 6)
+tt* a = tt_uniform(input_shape, -10, 10, true);
+tt* b = tt_uniform(input_shape, -10, 10, true);
+tt* a_b_mul = tt_mul(a, b);
+tt* sum = tt_sum(a_b_mul, -1);
+tgraph* comp_graph = tgraph_build(sum);
+tgraph_zeroed(comp_graph);
+tgraph_backprop(comp_graph);
 ```
 
-### matmul
+### how are matmul, batch norms and convolutions done?
 
-There is no direct matmul op. You have to do it manually with a reshape, mul and sum.
+There is no direct matmul op. You have to do it manually with a reshape, expand, mul and sum.
 
 There is a function with all this behaviour though.
 
@@ -56,35 +56,24 @@ There is a function with all this behaviour though.
 ```
 <!-- TODO: show image of graph of matmul -->
 
-### batchnorm
-
 There is also no direct batch norm op. You have to do it manually with add and mul.
 
 ```c
 // TODO: give examples
 ```
-<!-- TODO: show image of graph of matmul -->
+<!-- TODO: show image of graph of batch norm -->
 
-### convolution
-
-Convolutions are done manually however.
-
-```c
-// TODO: give examples
-```
-
-<!-- TODO: show image of graph of matmul -->
+Convolutions are done manually for the moment.
 
 ## examples
 
 - [ ] mnist handwritten digit recognition
 
-<!--  TODO: Add a image/gif as example  -->
-
 ## future ideas
 
-- python bindings
 - different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
 - other convolution implementations (singular value decomposition, FFT, winograd)
-- could totally do a refactor, might be nice to have a context like ggml
 - different types (bfloat, mx-compliant)
+- python bindings
+- could totally do a refactor, might be nice to have a context like ggml
+- could do permute+pad op then i think convs/maxpools could done indirectly as well
