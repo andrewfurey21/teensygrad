@@ -653,37 +653,36 @@ tt *tt_expand(tt *original_tensor, uint64_t axis, uint64_t factor) {
   return expanded_tensor;
 }
 
-// might need for adam/optimizing weights
-// void _neg_backwards(tt *self) {
-//   if (!self->parents[0]->requires_grad) {
-//     return;
-//   }
-//   tt *grads = tt_fill(self->shape, -1.0f, false);
-//   tt *mul_grads = tt_mul(grads, self->grads);
-//   tt *acc_grads = tt_add(mul_grads, self->parents[0]->grads);
-//   tt_free(self->parents[0]->grads);
-//   tt_free(grads);
-//   tt_free(mul_grads);
-//   self->parents[0]->grads = acc_grads;
-// }
-//
-// tt *tt_neg(tt *a) {
-//   ttuple *shape = ttuple_copy(a->shape);
-//   tt *t = tt_zeros(shape, a->requires_grad);
-//
-//   tt **parents = NULL;
-//   if (a->requires_grad) {
-//     parents = (tt **)malloc(top_radix(NEG) * sizeof(tt *));
-//     parents[0] = a;
-//   }
-//
-//   t->parents = parents;
-//   t->op = NEG;
-//   t->_backwards = &_neg_backwards;
-//
-//   for (uint64_t i = 0; i < a->data->size; i++) {
-//     float value = tstorage_getitem(a->data, i);
-//     tstorage_setitem(t->data, i, -value);
-//   }
-//   return t;
-// }
+void _neg_backwards(tt *self) {
+  if (!self->parents[0]->requires_grad) {
+    return;
+  }
+  tt *grads = tt_fill(self->view->shape, -1.0f, false);
+  tt *mul_grads = tt_mul(grads, self->grads);
+  tt *acc_grads = tt_add(mul_grads, self->parents[0]->grads);
+  tt_free(self->parents[0]->grads);
+  tt_free(grads);
+  tt_free(mul_grads);
+  self->parents[0]->grads = acc_grads;
+}
+
+tt *tt_neg(tt *a) {
+  ttuple *shape = ttuple_copy(a->view->shape);
+  tt *t = tt_zeros(shape, a->requires_grad);
+
+  tt **parents = NULL;
+  if (a->requires_grad) {
+    parents = (tt **)malloc(top_radix(NEG) * sizeof(tt *));
+    parents[0] = a;
+  }
+
+  t->parents = parents;
+  t->op = NEG;
+  t->_backwards = &_neg_backwards;
+
+  for (uint64_t i = 0; i < a->data->size; i++) {
+    float value = tstorage_getitem(a->data, i);
+    tstorage_setitem(t->data, i, -value);
+  }
+  return t;
+}

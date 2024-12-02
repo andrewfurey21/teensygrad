@@ -13,6 +13,7 @@
 int main(void) {
     srand(time(NULL));
 
+    // Example: b @ a
     ttuple* a_shape= ttuple_build(2, 4, 3);
     tt* a = tt_linspace(a_shape, 0, 3*4, false);
 
