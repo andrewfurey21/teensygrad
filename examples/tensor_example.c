@@ -15,13 +15,11 @@ int main(void) {
 
     // Example: b @ a
     ttuple* a_shape= ttuple_build(2, 4, 3);
-    tt* a = tt_linspace(a_shape, 0, 3*4, false);
+    tt* a = tt_linspace(a_shape, 0, 3*4, true);
 
     ttuple* b_shape= ttuple_build(2, 5, 4);
-    tt* b = tt_linspace(b_shape, 0, 5*4, false);
+    tt* b = tt_linspace(b_shape, 0, 5*4, true);
 
-    tt_print(a);
-    tt_print(b);
 
 
     ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
@@ -40,5 +38,16 @@ int main(void) {
     ttuple* reshaped_dot_shape = ttuple_build(2, 5, 3);
     tt* reshaped_dot = tt_reshape(dot, reshaped_dot_shape);
 
-    tt_print(reshaped_dot);
+    tt* dot_sum = tt_sum(reshaped_dot, -1);
+
+    tgraph* comp_graph = tgraph_build(dot_sum);
+    tgraph_zeroed(comp_graph);
+    tgraph_backprop(comp_graph);
+
+
+    tt_print(a);
+    tt_print(a->grads);
+    printf("-------------------\n");
+    tt_print(b);
+    tt_print(b->grads);
 }
