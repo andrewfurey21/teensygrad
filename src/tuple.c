@@ -80,6 +80,16 @@ bool ttuple_equal(ttuple* a, ttuple* b) {
     return true;
 }
 
+// a / b
+ttuple* ttuple_div(ttuple* a, ttuple* b) {
+    assert(a->size == b->size);
+    ttuple* copy = ttuple_zeros(a->size);
+    for (int i = 0; i < a->size; i++) {
+        copy->items[i] = a->items[i] / b->items[i];
+    }
+    return copy;
+}
+
 void ttuple_free(ttuple* s) {
     free(s->items);
     free(s);

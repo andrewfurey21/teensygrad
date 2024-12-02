@@ -32,6 +32,7 @@ ttuple *ttuple_add(ttuple *a, ttuple *b);
 uint64_t ttuple_prod(ttuple *s);
 ttuple *ttuple_copy(ttuple *other);
 bool ttuple_equal(ttuple *a, ttuple *b);
+ttuple* ttuple_div(ttuple* a, ttuple* b);
 void ttuple_free(ttuple *s);
 void ttuple_print(ttuple *s);
 

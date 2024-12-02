@@ -587,20 +587,55 @@ tt *tt_reshape(tt *a, ttuple *new_shape) {
 }
 
 // Expand
-// basically forwards sum
+// basically forwards sum (could totally do a refactor)
 void _expand_backwards(tt *self) {
   // sum
+  // shape should be same for tensor and their gradients
+  ttuple* div = ttuple_div(self->view->shape, self->parents[0]->view->shape);
+  int expanded_axis = -1;
+  for (int i = 0; i < div->size; i++) {
+    if (div->items[i] != 1) {
+      expanded_axis = i;
+      break;
+    }
+  }
+  assert(expanded_axis != -1 && "Did not find an expanded axis from self->view->shape");
+
+  // sum self->parents[0]->grads along expanded_axis
+  
+  uint64_t along_axis = self->view->shape->items[expanded_axis];
+  uint64_t num_accumulate = ttuple_prod(self->view->shape) / along_axis;
+  ttuple* current = ttuple_zeros(self->view->shape->size);
+
+  tt* self_grad = self->grads;
+  tt* parent_grad = self->parents[0]->grads;
+  for (uint64_t i = 0; i < num_accumulate; i++) {
+    float sum = 0.0f;
+    for (uint64_t j = 0; j < along_axis; j++) {
+      sum += tt_getindex(self_grad, current);
+      current->items[expanded_axis]++;
+    }
+    current->items[expanded_axis] = 0;
+    tt_setindex(parent_grad, current, sum);
+    for (int k = current->size - 1; k >= 0; k--) {
+      if (k==expanded_axis) continue;
+      current->items[k]++;
+      if (current->items[k] >= self->view->shape->items[k]) {
+        current->items[k] = 0;
+        continue;
+      }
+      break;
+    }
+  }
 }
 
 // currently, must expand, cannot contract.
 // can expand axis where dim>=1
 // basically backwards sum
 // follows broadcasting rules, cannot expand dim that isn't 1
-// TODO: sum and expand could use refactoring.
 // TODO: rename a/s in function parameters to original_tensor, shape, etc.
 // TODO: maybe rename backwards functions to like tensor_sum_backwards (not in
 // header file)
-// TODO: get better at valgrind and find memory leaks etc.
 tt *tt_expand(tt *original_tensor, uint64_t axis, uint64_t factor) {
   ttuple *new_shape = ttuple_copy(original_tensor->view->shape);
   assert(axis >= 0 && axis < new_shape->size &&
