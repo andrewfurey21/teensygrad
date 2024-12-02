@@ -86,3 +86,5 @@ Convolutions are done manually however.
 - python bindings
 - different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
 - other convolution implementations (singular value decomposition, FFT, winograd)
+- could totally do a refactor, might be nice to have a context like ggml
+- different types (bfloat, mx-compliant)
