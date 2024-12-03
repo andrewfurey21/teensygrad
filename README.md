@@ -22,7 +22,7 @@ My approach was building a small set of base operations that can be used to buil
     - [x] reshape
     - [x] expand
     - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
-    - [ ] flatten (just a reshape)
+    - [x] flatten (just a reshape)
     - [ ] max pool
     - [ ] convolutions
     - [ ] batch norm (indirectly, using add and mul)
@@ -48,6 +48,8 @@ tgraph_backprop(comp_graph);
 ### how are matmul, batch norms and convolutions done?
 
 There is no direct matmul op. You have to do it manually with a reshape, expand, mul and sum.
+
+<!-- TODO: show image from excalidraw doing matmul -->
 
 There is a function with all this behaviour though.
 

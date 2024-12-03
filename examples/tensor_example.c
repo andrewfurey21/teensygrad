@@ -1,6 +1,7 @@
 #include "../include/tensor.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "assert.h"
 #include <stdint.h>
 #include <time.h>
 
@@ -10,18 +11,9 @@
 
 // TODO: get this working correctly, compare with proper tinygrad/pytorch impl
 
-int main(void) {
-    srand(time(NULL));
-
-    // Example: b @ a
-    ttuple* a_shape= ttuple_build(2, 4, 3);
-    tt* a = tt_linspace(a_shape, 0, 3*4, true);
-
-    ttuple* b_shape= ttuple_build(2, 5, 4);
-    tt* b = tt_linspace(b_shape, 0, 5*4, true);
-
-
-
+// TODO: variable shapes etc.
+// TODO: add to hl_ops or something.
+tt* linear_layer(tt* a, tt* b) {
     ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
     tt* reshape_a = tt_reshape(a, reshape_a_shape);
 
@@ -40,14 +32,33 @@ int main(void) {
 
     tt* dot_sum = tt_sum(reshaped_dot, -1);
 
-    tgraph* comp_graph = tgraph_build(dot_sum);
-    tgraph_zeroed(comp_graph);
-    tgraph_backprop(comp_graph);
+    return dot_sum;
+}
 
+tt* flatten(tt* input, int start_dim) {
+    assert(start_dim >= 0 && start_dim < input->view->shape->size);
+    ttuple* new_shape = ttuple_zeros(start_dim+1);
+    uint64_t end = 1;
+    for (int i = 0; i < input->view->shape->size; i++) {
+        if (i >= start_dim) {
+            end *= input->view->shape->items[i];
+        } else {
+            new_shape->items[i] = input->view->shape->items[i];
+        }
+    }
+    new_shape->items[start_dim] = end;
+    tt* flattened = tt_reshape(input, new_shape);
+    return flattened;
+}
 
-    tt_print(a);
-    tt_print(a->grads);
-    printf("-------------------\n");
-    tt_print(b);
-    tt_print(b->grads);
+int main(void) {
+    srand(time(NULL));
+
+    ttuple* input_shape = ttuple_build(4, 2, 64, 3, 3);
+    tt* input = tt_linspace(input_shape, 0, 64*3*3, true);
+
+    tt* output = flatten(input, 1);
+
+    ttuple_print(input->view->shape);
+    ttuple_print(output->view->shape);
 }

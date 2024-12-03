@@ -84,7 +84,7 @@ void tt_print(tt *t);
 tt *tt_view(tt *tensor, tview *view);
 void tt_free(tt *t);
 
-// ops
+// base ops
 tt *tt_add(tt *a, tt *b);
 tt *tt_mul(tt *a, tt *b);
 tt *tt_sum(tt *a, int axis);
