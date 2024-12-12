@@ -54,11 +54,14 @@ tt* flatten(tt* input, int start_dim) {
 int main(void) {
     srand(time(NULL));
 
-    ttuple* input_shape = ttuple_build(3, 2, 6, 6);
-    tt* input = tt_linspace(input_shape, 0, 2*6*6, true);
+    ttuple* shape = ttuple_build(4, 3, 2, 4, 4);
+    tt* input = tt_linspace(shape, 0, 3*2*4*4, true);
+    tt* pool = tt_maxpool2d(input, 2);
+    tt* sum = tt_sum(pool, -1);
 
-    tt* output = maxpool2d(input, 2);
+    tgraph* net = tgraph_build(sum);
+    tgraph_zeroed(net);
+    tgraph_backprop(net);
 
-    tgraph* net = tgraph_build(output);
-    tgraph_print(net, true);
+    tgraph_print(net, false, true);
 }

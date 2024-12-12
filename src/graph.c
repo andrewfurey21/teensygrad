@@ -4,8 +4,6 @@
 #include "../include/tensor.h"
 #define MAX_NODES 100
 
-// TODO: graph to string (or visualize graph, output to image)
-
 bool already_visited(tgraph* net, tt* t) {
     for (size_t i = 0; i < net->size; i++) {
         if (net->nodes[i] == t) {
@@ -15,7 +13,6 @@ bool already_visited(tgraph* net, tt* t) {
     return false;
 }
 
-//sorts graph in reversed topological order
 void topo_sort(tgraph* net, tt* current) {
     for (size_t i = 0; i < top_radix(current->op); i++) {
         tt* parent = current->parents[i];
@@ -53,7 +50,6 @@ void tgraph_zeroed(tgraph* net) {
     }
 }
 
-//when putting params into optimizer, get rid of any nonleaf,nontraining nodes.
 void tgraph_backprop(tgraph* net) {
     if (!net->training) return;
     ttuple* unit_shape = ttuple_build(1, 1);
@@ -74,8 +70,11 @@ void tgraph_backprop(tgraph* net) {
     }
 }
 
-void tgraph_print(tgraph* net, bool no_buffer) {
+
+// TODO: sort out the graph nicer.
+void tgraph_print(tgraph* net, bool no_buffer, bool show_grads) {
     for (int i = 0; i < net->size; i++) {
-        tt_print(net->nodes[i], no_buffer);
+        tt_print(net->nodes[i], no_buffer, show_grads);
+        if (i < net->size-1) printf(" | \n");
     }
 }

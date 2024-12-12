@@ -19,6 +19,10 @@
 // rename a/s in function parameters to original_tensor, shape, etc.
 // maybe rename backwards functions to like tensor_sum_backwards (not in
 // header file)
+// double check backwards functions are accumulating gradients and not just
+// reseting them
+// refactor ttmaxpool2d backwards, so that its only the first 5 nested for loop
+// not both
 
 tstorage *tstorage_new(uint64_t buffer_length) {
   float *buffer = (float *)calloc(buffer_length, sizeof(float));
@@ -264,23 +268,28 @@ void tt_to_n(struct tt *t, float n) {
   }
 }
 
-void tt_print(tt *t, bool no_buffer) {
-  printf("tensor: \n  ");
+void tt_print(tt *t, bool no_buffer, bool show_grads) {
   if (!t) {
     printf("values: (null)\n");
     return;
   }
   ttuple_print(t->view->shape);
   if (t->requires_grad) {
-    printf("  op: ");
     print_op_string(t->op);
   } else {
-    printf("  NO GRADS\n");
+    printf("NO GRADS\n");
   }
   if (!no_buffer) {
-    printf("  values: [ ");
+    printf("values: [ ");
     for (int i = 0; i < t->data->size; i++) {
       printf("%f, ", t->data->buffer[i]);
+    }
+    printf("]\n");
+  }
+  if (t->requires_grad && show_grads) {
+    printf("gradient values: [ ");
+    for (int i = 0; i < t->grads->data->size; i++) {
+      printf("%f, ", t->grads->data->buffer[i]);
     }
     printf("]\n");
   }
@@ -315,7 +324,6 @@ void tt_destroy_grads(tt *t) {
 
 void _add_backwards(tt *self) {
   if (self->parents[0]->requires_grad) {
-    // grads get created if requires_grad, so not checking.
     tt *grads_0 = tt_add(self->grads, self->parents[0]->grads);
     tt_destroy_grads(grads_0);
     tt_free(self->parents[0]->grads);
@@ -403,31 +411,31 @@ void _sum_backwards(tt *self) {
   ttuple *unit_shape = ttuple_build(1, 1);
 
   ttuple *self_shape = self->view->shape;
-  ttuple *par_shape = self->parents[0]->view->shape;
+  ttuple *parent_shape = self->parents[0]->view->shape;
   if (ttuple_equal(unit_shape, self_shape)) {
     tt *expanded_grads =
-        tt_fill(par_shape, self->grads->data->buffer[0], false);
+        tt_fill(parent_shape, self->grads->data->buffer[0], false);
     tt *acc_grads = tt_add(self->parents[0]->grads, expanded_grads);
     tt_free(self->parents[0]->grads);
     tt_free(expanded_grads);
     self->parents[0]->grads = acc_grads;
   } else {
     int expand_axis = 0;
-    assert(self_shape->size == par_shape->size);
+    assert(self_shape->size == parent_shape->size);
 
     // TODO: i don't think this works if one of the dimensions was always 1.
     // make sure to check, especially if bs=1
     for (int i = 0; i < self_shape->size; i++) {
-      if (self_shape->items[i] == 1 && par_shape->items[i] != 1) {
+      if (self_shape->items[i] == 1 && parent_shape->items[i] != 1) {
         expand_axis = i;
         break;
       }
     }
 
-    tt *expanded_grads = tt_zeros(par_shape, false);
+    tt *expanded_grads = tt_zeros(parent_shape, false);
 
-    ttuple *current = ttuple_zeros(par_shape->size);
-    uint64_t along_axis = par_shape->items[expand_axis];
+    ttuple *current = ttuple_zeros(parent_shape->size);
+    uint64_t along_axis = parent_shape->items[expand_axis];
     for (uint64_t i = 0; i < self->grads->data->size; i++) {
       // expanding
       for (uint64_t j = 0; j < along_axis; j++) {
@@ -446,7 +454,7 @@ void _sum_backwards(tt *self) {
           continue;
         }
         current->items[k]++;
-        if (current->items[k] >= par_shape->items[k]) {
+        if (current->items[k] >= parent_shape->items[k]) {
           current->items[k] = 0;
           continue;
         }
@@ -625,6 +633,7 @@ void _expand_backwards(tt *self) {
       current->items[expanded_axis]++;
     }
     current->items[expanded_axis] = 0;
+    // TODO: bug, should be adding not setting
     tt_setindex(parent_grad, current, sum);
     for (int k = current->size - 1; k >= 0; k--) {
       if (k == expanded_axis)
@@ -729,21 +738,113 @@ tt *tt_neg(tt *a) {
   return t;
 }
 
-void _maxpool2d_backwards(tt *self) {}
+// still assuming square kernel
+void _maxpool2d_backwards(tt *self) {
+  // parent grads will be tensor, only with 1s or 0s
+  // so basically max pool, except keep track of max index.
+  // set max index to 1, others to 0
+  // mul expanded by sparse grads
+  // then acc to parents->grads.
+
+  ttuple *self_shape = self->view->shape;
+  ttuple *parent_shape = self->parents[0]->view->shape;
+  int x_index = self_shape->size - 1;
+
+  int pooled_width = self_shape->items[x_index];
+  int original_width = parent_shape->items[x_index];
+  int pooled_height = self_shape->items[x_index - 1];
+  int original_height = parent_shape->items[x_index - 1];
+  assert(original_width / pooled_width == original_height / pooled_height &&
+         "not a square kernel buddy.");
+
+  int kernel_size = original_width / pooled_width;
+
+  int dims = parent_shape->size;
+  int channels = parent_shape->size > 2 ? parent_shape->items[dims - 3] : 0;
+  int batches = parent_shape->size > 3 ? parent_shape->items[dims - 4] : 0;
+
+  // expanding self->grads
+  tt *expanded_self_grad = tt_zeros(parent_shape, false);
+  ttuple *index = ttuple_zeros(parent_shape->size);
+  // i dont like 5 nested for loops :(
+  for (int b = 0; b < fmax(batches, 1); b++) {
+    if (batches)
+      index->items[x_index - 3] = b;
+    for (int c = 0; c < fmax(channels, 1); c++) {
+      if (channels)
+        index->items[x_index - 2] = c;
+      for (int oh = 0; oh < original_height; oh++) {
+        for (int ow = 0; ow < original_width; ow++) {
+          index->items[x_index - 1] = oh / kernel_size;
+          index->items[x_index] = ow / kernel_size;
+          float value = tt_getindex(self->grads, index);
+
+          index->items[x_index] = ow;
+          index->items[x_index - 1] = oh;
+          tt_setindex(expanded_self_grad, index, value);
+        }
+      }
+    }
+  }
+  ttuple_free(index);
+
+  index = ttuple_zeros(parent_shape->size);
+  tt *pooled_grads = tt_ones(self->parents[0]->view->shape, false);
+  for (int b = 0; b < fmax(batches, 1); b++) {
+    if (batches)
+      index->items[x_index - 3] = b;
+    for (int c = 0; c < fmax(channels, 1); c++) {
+      if (channels)
+        index->items[x_index - 2] = c;
+      for (int oh = 0; oh < original_height; oh += kernel_size) {
+        for (int ow = 0; ow < original_width; ow += kernel_size) {
+          float max = -INFINITY;
+          ttuple *max_index = ttuple_copy(index);
+          for (int k = 0; k < kernel_size * kernel_size; k++) {
+            int x = ow + (k % kernel_size);
+            int y = oh + (k / kernel_size);
+            index->items[x_index - 1] = y;
+            index->items[x_index] = x;
+            float value = tt_getindex(
+                self->parents[0],
+                index); // backprop is dependent on tensors staying
+            if (value > max) { // if equal, its the first one.
+              if (max != -INFINITY) tt_setindex(pooled_grads, max_index, 0);
+              max = value;
+              ttuple_free(max_index);
+              max_index = ttuple_copy(index);
+            } else {
+              tt_setindex(pooled_grads, index, 0);
+            }
+          }
+          ttuple_free(max_index);
+        }
+      }
+    }
+  }
+  ttuple_free(index);
+
+  tt *expanded_by_pooled_grads = tt_mul(expanded_self_grad, pooled_grads);
+  tt *accumulated_grads = tt_add(self->parents[0]->grads, expanded_by_pooled_grads);
+  tt_free(expanded_self_grad);
+  tt_free(pooled_grads);
+  self->parents[0]->grads = accumulated_grads;
+}
 
 // NOTE:
 // assuming input is divisible by kernel size
 // stride is kernel size
 // no dilation, padding. ceilmode=False.
 // 4d, 3d, 2d only.
-tt *maxpool2d(tt *input, int kernel_size) {
+tt *tt_maxpool2d(tt *input, int kernel_size) {
   ttuple *input_shape = input->view->shape;
+  int x_index = input_shape->size - 1;
 
   assert(input_shape->size >= 2);
   assert(kernel_size > 1 && "Kernel size must be greater than 1");
-  assert(input_shape->items[0] % kernel_size == 0 &&
+  assert(input_shape->items[x_index] % kernel_size == 0 &&
          "Width not divisble by kernel size");
-  assert(input_shape->items[1] % kernel_size == 0 &&
+  assert(input_shape->items[x_index - 1] % kernel_size == 0 &&
          "Height not divisble by kernel size");
 
   int end_index = input_shape->size - 1;
@@ -762,42 +863,39 @@ tt *maxpool2d(tt *input, int kernel_size) {
     parents = (tt **)malloc(top_radix(MAX_POOL_2D) * sizeof(tt *));
     parents[0] = input;
   }
-
   tt *output = tt_zeros(new_shape, input->requires_grad);
   output->parents = parents;
   output->op = MAX_POOL_2D;
   output->_backwards = &_maxpool2d_backwards;
 
-  // the formatter made this look gross
   int dims = input_shape->size;
   int channels = input_shape->size > 2 ? input_shape->items[dims - 3] : 0;
   int batches = input_shape->size > 3 ? input_shape->items[dims - 4] : 0;
 
   // NOTE: this looks really bad.
-  int y_index = input_shape->size - 2;
   ttuple *index = ttuple_copy(input_shape);
   for (int b = 0; b < fmax(batches, 1); b++) {
     if (batches)
-      index->items[y_index - 2] = b;
+      index->items[x_index - 3] = b;
     for (int c = 0; c < fmax(channels, 1); c++) {
       if (channels)
-        index->items[y_index - 1] = c;
+        index->items[x_index - 2] = c;
       for (int oh = 0; oh < original_height; oh += kernel_size) {
         for (int ow = 0; ow < original_width; ow += kernel_size) {
           float max = -INFINITY;
           for (int k = 0; k < kernel_size * kernel_size; k++) {
             int x = ow + (k % kernel_size);
             int y = oh + (k / kernel_size);
-            index->items[y_index] = y;
-            index->items[y_index + 1] = x;
+            index->items[x_index - 1] = y;
+            index->items[x_index] = x;
             float value = tt_getindex(input, index);
             if (value > max)
               max = value;
           }
           int x = ow / kernel_size;
           int y = oh / kernel_size;
-          index->items[y_index] = y;
-          index->items[y_index + 1] = x;
+          index->items[x_index - 1] = y;
+          index->items[x_index] = x;
           tt_setindex(output, index, max);
         }
       }

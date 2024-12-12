@@ -83,7 +83,7 @@ void tt_copy_buffer(tt *dest, tt *src);
 tt *tt_copy(tt *original, bool requires_grad);
 void tt_to_zeros(tt *t);
 void tt_to_n(tt *t, float n);
-void tt_print(tt *t, bool no_buffer);
+void tt_print(tt *t, bool no_buffer, bool show_grads);
 tt *tt_view(tt *tensor, tview *view);
 void tt_free(tt *t);
 
@@ -94,7 +94,7 @@ tt *tt_sum(tt *a, int axis);
 tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
 tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
-tt *maxpool2d(tt *input, int kernel_size);
+tt *tt_maxpool2d(tt *input, int kernel_size);
 
 // computational graph
 typedef struct {
@@ -107,7 +107,7 @@ tgraph *tgraph_build(tt *x);
 void tgraph_free(tgraph *net);
 void tgraph_zeroed(tgraph *net);
 void tgraph_backprop(tgraph *net);
-void tgraph_print(tgraph* net, bool no_buffer);
+void tgraph_print(tgraph* net, bool no_buffer, bool show_grads);
 
 // nn
 typedef struct {
