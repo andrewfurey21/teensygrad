@@ -4,6 +4,7 @@
 #include "../include/tensor.h"
 #define MAX_NODES 100
 
+// TODO: graph to string (or visualize graph, output to image)
 
 bool already_visited(tgraph* net, tt* t) {
     for (size_t i = 0; i < net->size; i++) {
@@ -29,14 +30,11 @@ void topo_sort(tgraph* net, tt* current) {
 
 tgraph* tgraph_build(tt* x) {
     assert(x->requires_grad && "Will not build graph on something that doesn't require gradients");
-
     tgraph* net = (tgraph*)malloc(sizeof(tgraph));
     net->nodes = (tt**)malloc(sizeof(tt*)*MAX_NODES);
     net->size = 0;
     net->training = true;
-
     topo_sort(net, x);
-
     return net;
 }
 
@@ -55,9 +53,9 @@ void tgraph_zeroed(tgraph* net) {
     }
 }
 
+//when putting params into optimizer, get rid of any nonleaf,nontraining nodes.
 void tgraph_backprop(tgraph* net) {
     if (!net->training) return;
-
     ttuple* unit_shape = ttuple_build(1, 1);
     tt* current = net->nodes[net->size-1];
     assert(ttuple_equal(current->view->shape, unit_shape) && "Last tensor must be scalar");
@@ -74,8 +72,4 @@ void tgraph_backprop(tgraph* net) {
         }
         current = net->nodes[i];
     }
-}
-
-// TODO: graph to string (or visualize graph, output to image)
-void tgraph_print(tgraph* net) {
 }

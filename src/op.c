@@ -11,6 +11,7 @@ size_t top_radix(enum top op) {
   case SUM_REDUCE:
   case RESHAPE:
   case EXPAND:
+  case MAX_POOL:
     return 1;
   case ADD:
   case MUL:
@@ -44,6 +45,9 @@ void print_op_string(enum top op) {
     printf("ADD\n");
     return;
   case MUL:
+    printf("MUL\n");
+    return;
+  case MAX_POOL:
     printf("MUL\n");
     return;
   default:

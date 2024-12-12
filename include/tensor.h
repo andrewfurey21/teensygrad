@@ -6,6 +6,8 @@
 #ifndef _TENSOR_H
 #define _TENSOR_H
 
+#define MAX_ITEMS 4
+
 enum top { // need enough for: conv, batchnorm, maxpool, linear
   NOOP = 0,
   RELU,
@@ -15,6 +17,7 @@ enum top { // need enough for: conv, batchnorm, maxpool, linear
   EXPAND,
   ADD,
   MUL,
+  MAX_POOL,
 };
 
 size_t top_radix(enum top);
@@ -91,6 +94,7 @@ tt *tt_sum(tt *a, int axis);
 tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
 tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
+tt *maxpool2d(tt *input, int kernel_size);
 
 // computational graph
 typedef struct {

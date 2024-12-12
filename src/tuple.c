@@ -20,7 +20,6 @@ ttuple* ttuple_build(uint32_t size, ...) {
 
     for (int i = 0; i < size; i++) {
         ret->items[i] = va_arg(ap, uint32_t);
-        // assert(ret->items[i] > 0 && "Dimensions must be positive");
     }
     va_end(ap);
     return ret;
@@ -80,7 +79,6 @@ bool ttuple_equal(ttuple* a, ttuple* b) {
     return true;
 }
 
-// a / b
 ttuple* ttuple_div(ttuple* a, ttuple* b) {
     assert(a->size == b->size);
     ttuple* copy = ttuple_zeros(a->size);
@@ -104,24 +102,3 @@ void ttuple_print(ttuple* s) {
     }
     printf(")\n");
 }
-
-// ttuple* ttuple_permute(ttuple* shape, ttuple* axes){
-//     ttuple* permuted = ttuple_copy(shape);
-//     for (int i = 0; i < shape->size; i++) {
-//         int axis = axes->items[i];
-//         assert(axis >= 0 && axis <= MAX_ITEMS);
-//         permuted->items[i] = shape->items[axis];
-//     }
-//     assert(ttuple_mul(permuted) == ttuple_mul(shape) && "Possibly repeated axis");
-//     return permuted;
-// }
-
-// bool tshape_duplicates(struct tshape* axes) {
-//     assert(axes->size <= MAX_ITEMS);
-//     for (int i = 0; i < axes->size-1; i++) {
-//         for (int j = i+1; j < axes->size; j++) {
-//             if (axes->items[i] == axes->items[j]) return true;
-//         }
-//     }
-//     return false;
-// } why?

@@ -5,14 +5,14 @@
 #include <stdint.h>
 #include <time.h>
 
-// TODO: encapsulating ops with functions is broken, i dont think gradients flow correcly.
-// TODO: check summing with (2, 1, 1) or something with ones
-// TODO: get name of linspace/arange correct
-
-// TODO: get this working correctly, compare with proper tinygrad/pytorch impl
-
-// TODO: variable shapes etc.
-// TODO: add to hl_ops or something.
+// TODO:
+// encapsulating ops with functions is broken, i dont think gradients flow correcly.
+// check summing with (2, 1, 1) or something with ones
+// get name of linspace/arange correct
+// get this working correctly, compare with proper tinygrad/pytorch impl
+// variable shapes etc.
+// add to hl_ops or something.
+// need to free stuff in function if not being used later.
 tt* linear_layer(tt* a, tt* b) {
     ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
     tt* reshape_a = tt_reshape(a, reshape_a_shape);
@@ -54,11 +54,11 @@ tt* flatten(tt* input, int start_dim) {
 int main(void) {
     srand(time(NULL));
 
-    ttuple* input_shape = ttuple_build(4, 2, 64, 3, 3);
-    tt* input = tt_linspace(input_shape, 0, 64*3*3, true);
+    ttuple* input_shape = ttuple_build(3, 2, 6, 6);
+    tt* input = tt_linspace(input_shape, 0, 2*6*6, false);
 
-    tt* output = flatten(input, 1);
+    tt* output = maxpool2d(input, 2);
 
-    ttuple_print(input->view->shape);
-    ttuple_print(output->view->shape);
+    tt_print(input);
+    tt_print(output);
 }

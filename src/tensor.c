@@ -12,6 +12,14 @@
 
 #include "../include/tensor.h"
 
+// TODO:
+// get rid of storage/view abstraction.
+// theres a lot of repetitive stuff, especially in ops. refactor a bit.
+// test a graph, where on input needs grads and the other doesn't.
+// rename a/s in function parameters to original_tensor, shape, etc.
+// maybe rename backwards functions to like tensor_sum_backwards (not in
+// header file)
+
 tstorage *tstorage_new(uint64_t buffer_length) {
   float *buffer = (float *)calloc(buffer_length, sizeof(float));
   tstorage *storage = (tstorage *)malloc(sizeof(tstorage));
@@ -91,8 +99,9 @@ void tview_free(tview *view) {
 
 tt *tt_zeros(ttuple *s, bool requires_grad) {
   uint64_t size = ttuple_prod(s);
-  ttuple *copy = ttuple_copy(s);
+  assert(size != 0);
 
+  ttuple *copy = ttuple_copy(s);
   tstorage *data = tstorage_new(size);
 
   tt *grads = NULL;
@@ -155,7 +164,6 @@ tt *tt_from_buffer(ttuple *s, float *buffer, bool requires_grad) {
   return ret;
 }
 
-// TODO: test please
 float tt_getindex(tt *self, ttuple *s) {
   ttuple *self_shape = self->view->shape;
   assert(s->size == self->view->shape->size);
@@ -267,8 +275,6 @@ void tt_print(tt *t) {
     printf("  op: ");
     print_op_string(t->op);
   } else {
-    // TODO: if not requires grad, maybe check where it came from, like grad of
-    // mul or something
     printf("  NO GRADS\n");
   }
   printf("  values: [ ");
@@ -591,7 +597,7 @@ tt *tt_reshape(tt *a, ttuple *new_shape) {
 void _expand_backwards(tt *self) {
   // sum
   // shape should be same for tensor and their gradients
-  ttuple* div = ttuple_div(self->view->shape, self->parents[0]->view->shape);
+  ttuple *div = ttuple_div(self->view->shape, self->parents[0]->view->shape);
   int expanded_axis = -1;
   for (int i = 0; i < div->size; i++) {
     if (div->items[i] != 1) {
@@ -599,16 +605,17 @@ void _expand_backwards(tt *self) {
       break;
     }
   }
-  assert(expanded_axis != -1 && "Did not find an expanded axis from self->view->shape");
+  assert(expanded_axis != -1 &&
+         "Did not find an expanded axis from self->view->shape");
 
   // sum self->parents[0]->grads along expanded_axis
-  
+
   uint64_t along_axis = self->view->shape->items[expanded_axis];
   uint64_t num_accumulate = ttuple_prod(self->view->shape) / along_axis;
-  ttuple* current = ttuple_zeros(self->view->shape->size);
+  ttuple *current = ttuple_zeros(self->view->shape->size);
 
-  tt* self_grad = self->grads;
-  tt* parent_grad = self->parents[0]->grads;
+  tt *self_grad = self->grads;
+  tt *parent_grad = self->parents[0]->grads;
   for (uint64_t i = 0; i < num_accumulate; i++) {
     float sum = 0.0f;
     for (uint64_t j = 0; j < along_axis; j++) {
@@ -618,7 +625,8 @@ void _expand_backwards(tt *self) {
     current->items[expanded_axis] = 0;
     tt_setindex(parent_grad, current, sum);
     for (int k = current->size - 1; k >= 0; k--) {
-      if (k==expanded_axis) continue;
+      if (k == expanded_axis)
+        continue;
       current->items[k]++;
       if (current->items[k] >= self->view->shape->items[k]) {
         current->items[k] = 0;
@@ -633,9 +641,6 @@ void _expand_backwards(tt *self) {
 // can expand axis where dim>=1
 // basically backwards sum
 // follows broadcasting rules, cannot expand dim that isn't 1
-// TODO: rename a/s in function parameters to original_tensor, shape, etc.
-// TODO: maybe rename backwards functions to like tensor_sum_backwards (not in
-// header file)
 tt *tt_expand(tt *original_tensor, uint64_t axis, uint64_t factor) {
   ttuple *new_shape = ttuple_copy(original_tensor->view->shape);
   assert(axis >= 0 && axis < new_shape->size &&
@@ -664,7 +669,7 @@ tt *tt_expand(tt *original_tensor, uint64_t axis, uint64_t factor) {
   for (uint64_t i = 0; i < expanded_tensor->data->size; i++) {
     // expanding (like _sum_backwards)
     for (uint64_t j = 0; j < along_axis; j++) {
-      ttuple *original_index= ttuple_copy(expanded_index);
+      ttuple *original_index = ttuple_copy(expanded_index);
       original_index->items[axis] = 0;
       float num = tt_getindex(original_tensor, original_index);
       tt_setindex(expanded_tensor, expanded_index, num);
@@ -720,4 +725,82 @@ tt *tt_neg(tt *a) {
     tstorage_setitem(t->data, i, -value);
   }
   return t;
+}
+
+void _maxpool2d_backwards(tt *self) {}
+
+// NOTE:
+// assuming input is divisible by kernel size
+// stride is kernel size
+// no dilation, padding. ceilmode=False.
+// 4d, 3d, 2d only.
+tt *maxpool2d(tt *input, int kernel_size) {
+  ttuple *input_shape = input->view->shape;
+
+  assert(input_shape->size >= 2);
+  assert(kernel_size > 1 && "Kernel size must be greater than 1");
+  assert(input_shape->items[0] % kernel_size == 0 &&
+         "Width not divisble by kernel size");
+  assert(input_shape->items[1] % kernel_size == 0 &&
+         "Height not divisble by kernel size");
+
+  int end_index = input_shape->size - 1;
+  int original_width = input_shape->items[end_index];
+  int original_height = input_shape->items[end_index - 1];
+
+  int new_width = original_width / kernel_size;
+  int new_height = original_height / kernel_size;
+
+  ttuple *new_shape = ttuple_copy(input_shape);
+  new_shape->items[end_index] = new_width;
+  new_shape->items[end_index - 1] = new_height;
+
+  tt **parents = NULL;
+  if (input->requires_grad) {
+    parents = (tt **)malloc(top_radix(MAX_POOL) * sizeof(tt *));
+    parents[0] = input;
+  }
+
+  tt *output = tt_zeros(new_shape, input->requires_grad);
+  output->parents = parents;
+  output->op = MAX_POOL;
+  output->_backwards = &_maxpool2d_backwards;
+
+  // the formatter made this look gross
+  int dims = input_shape->size;
+  int channels = input_shape->size > 2 ? input_shape->items[dims - 3] : 0;
+  int batches = input_shape->size > 3 ? input_shape->items[dims - 4] : 0;
+
+  // NOTE: this looks really bad.
+  int y_index = input_shape->size - 2;
+  ttuple *index = ttuple_copy(input_shape);
+  for (int b = 0; b < fmax(batches, 1); b++) {
+    if (batches)
+      index->items[y_index - 2] = b;
+    for (int c = 0; c < fmax(channels, 1); c++) {
+      if (channels)
+        index->items[y_index - 1] = c;
+      for (int oh = 0; oh < original_height; oh += kernel_size) {
+        for (int ow = 0; ow < original_width; ow += kernel_size) {
+          float max = -INFINITY;
+          for (int k = 0; k < kernel_size * kernel_size; k++) {
+            int x = ow + (k % kernel_size);
+            int y = oh + (k / kernel_size);
+            index->items[y_index] = y;
+            index->items[y_index + 1] = x;
+            float value = tt_getindex(input, index);
+            if (value > max)
+              max = value;
+          }
+          int x = ow / kernel_size;
+          int y = oh / kernel_size;
+          index->items[y_index] = y;
+          index->items[y_index + 1] = x;
+          tt_setindex(output, index, max);
+        }
+      }
+    }
+  }
+  ttuple_free(index);
+  return output;
 }

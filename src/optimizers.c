@@ -38,3 +38,4 @@ void toptimizer_free(toptimizer *topt) {
 // void toptimizer_gather_params(): params require grads but are NOOPS.
 // retain grad? for non leaf nodes?
 //  TODO: ONLY UPDATE WEIGHTS!!
+//  implement adam
