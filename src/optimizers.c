@@ -19,8 +19,8 @@ void tsgd(toptimizer *optim) { // maybe just opt_params and net.
 }
 
 toptimizer *toptimizer_create(tgraph *net, uint64_t size,
-                                     toptimizer_params *opt_params,
-                                     void (*step)(toptimizer *)) {
+                              toptimizer_params *opt_params,
+                              void (*step)(toptimizer *)) {
   // assert(lr > 0 && lr <= 1 && "Learning rate should be between 0 and 1.");
   //  TODO: free/copy opt_params, check lrs etc.
   assert(size > 0 && "Must have 1 or more param.");

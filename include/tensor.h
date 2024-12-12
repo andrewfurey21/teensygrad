@@ -17,7 +17,7 @@ enum top { // need enough for: conv, batchnorm, maxpool, linear
   EXPAND,
   ADD,
   MUL,
-  MAX_POOL,
+  MAX_POOL_2D,
 };
 
 size_t top_radix(enum top);
@@ -83,7 +83,7 @@ void tt_copy_buffer(tt *dest, tt *src);
 tt *tt_copy(tt *original, bool requires_grad);
 void tt_to_zeros(tt *t);
 void tt_to_n(tt *t, float n);
-void tt_print(tt *t);
+void tt_print(tt *t, bool no_buffer);
 tt *tt_view(tt *tensor, tview *view);
 void tt_free(tt *t);
 
@@ -107,6 +107,7 @@ tgraph *tgraph_build(tt *x);
 void tgraph_free(tgraph *net);
 void tgraph_zeroed(tgraph *net);
 void tgraph_backprop(tgraph *net);
+void tgraph_print(tgraph* net, bool no_buffer);
 
 // nn
 typedef struct {

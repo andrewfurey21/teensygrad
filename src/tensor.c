@@ -264,7 +264,7 @@ void tt_to_n(struct tt *t, float n) {
   }
 }
 
-void tt_print(tt *t) {
+void tt_print(tt *t, bool no_buffer) {
   printf("tensor: \n  ");
   if (!t) {
     printf("values: (null)\n");
@@ -277,11 +277,13 @@ void tt_print(tt *t) {
   } else {
     printf("  NO GRADS\n");
   }
-  printf("  values: [ ");
-  for (int i = 0; i < t->data->size; i++) {
-    printf("%f, ", t->data->buffer[i]);
+  if (!no_buffer) {
+    printf("  values: [ ");
+    for (int i = 0; i < t->data->size; i++) {
+      printf("%f, ", t->data->buffer[i]);
+    }
+    printf("]\n");
   }
-  printf("]\n");
 }
 
 // should probably free any grads from children.
@@ -757,13 +759,13 @@ tt *maxpool2d(tt *input, int kernel_size) {
 
   tt **parents = NULL;
   if (input->requires_grad) {
-    parents = (tt **)malloc(top_radix(MAX_POOL) * sizeof(tt *));
+    parents = (tt **)malloc(top_radix(MAX_POOL_2D) * sizeof(tt *));
     parents[0] = input;
   }
 
   tt *output = tt_zeros(new_shape, input->requires_grad);
   output->parents = parents;
-  output->op = MAX_POOL;
+  output->op = MAX_POOL_2D;
   output->_backwards = &_maxpool2d_backwards;
 
   // the formatter made this look gross

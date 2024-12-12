@@ -11,7 +11,7 @@ size_t top_radix(enum top op) {
   case SUM_REDUCE:
   case RESHAPE:
   case EXPAND:
-  case MAX_POOL:
+  case MAX_POOL_2D:
     return 1;
   case ADD:
   case MUL:
@@ -47,8 +47,8 @@ void print_op_string(enum top op) {
   case MUL:
     printf("MUL\n");
     return;
-  case MAX_POOL:
-    printf("MUL\n");
+  case MAX_POOL_2D:
+    printf("MAX POOL 2D\n");
     return;
   default:
     assert(false && "This op is not implemented.");

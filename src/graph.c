@@ -73,3 +73,9 @@ void tgraph_backprop(tgraph* net) {
         current = net->nodes[i];
     }
 }
+
+void tgraph_print(tgraph* net, bool no_buffer) {
+    for (int i = 0; i < net->size; i++) {
+        tt_print(net->nodes[i], no_buffer);
+    }
+}

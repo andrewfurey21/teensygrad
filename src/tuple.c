@@ -6,7 +6,6 @@
 #include "../include/tensor.h"
 #include <stdint.h>
 
-#define MAX_ITEMS 4
 
 ttuple* ttuple_build(uint32_t size, ...) {
     assert(MAX_ITEMS >= size);

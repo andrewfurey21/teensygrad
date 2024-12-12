@@ -55,10 +55,10 @@ int main(void) {
     srand(time(NULL));
 
     ttuple* input_shape = ttuple_build(3, 2, 6, 6);
-    tt* input = tt_linspace(input_shape, 0, 2*6*6, false);
+    tt* input = tt_linspace(input_shape, 0, 2*6*6, true);
 
     tt* output = maxpool2d(input, 2);
 
-    tt_print(input);
-    tt_print(output);
+    tgraph* net = tgraph_build(output);
+    tgraph_print(net, true);
 }
