@@ -18,6 +18,7 @@ enum top { // need enough for: conv, batchnorm, maxpool, linear
   ADD,
   MUL,
   MAX_POOL_2D,
+  CONV_2D,
 };
 
 size_t top_radix(enum top);
@@ -35,7 +36,7 @@ ttuple *ttuple_add(ttuple *a, ttuple *b);
 uint64_t ttuple_prod(ttuple *s);
 ttuple *ttuple_copy(ttuple *other);
 bool ttuple_equal(ttuple *a, ttuple *b);
-ttuple* ttuple_div(ttuple* a, ttuple* b);
+ttuple *ttuple_div(ttuple *a, ttuple *b);
 void ttuple_free(ttuple *s);
 void ttuple_print(ttuple *s);
 
@@ -95,6 +96,7 @@ tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
 tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
 tt *tt_maxpool2d(tt *input, int kernel_size);
+tt *tt_conv2d(tt *input, tt *kernels);
 
 // computational graph
 typedef struct {
@@ -107,7 +109,7 @@ tgraph *tgraph_build(tt *x);
 void tgraph_free(tgraph *net);
 void tgraph_zeroed(tgraph *net);
 void tgraph_backprop(tgraph *net);
-void tgraph_print(tgraph* net, bool no_buffer, bool show_grads);
+void tgraph_print(tgraph *net, bool no_buffer, bool show_grads);
 
 // nn
 typedef struct {

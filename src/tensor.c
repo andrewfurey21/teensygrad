@@ -23,6 +23,7 @@
 // reseting them
 // refactor ttmaxpool2d backwards, so that its only the first 5 nested for loop
 // not both
+// refactor setting up tensors in ops with a function.
 
 tstorage *tstorage_new(uint64_t buffer_length) {
   float *buffer = (float *)calloc(buffer_length, sizeof(float));
@@ -805,11 +806,12 @@ void _maxpool2d_backwards(tt *self) {
             int y = oh + (k / kernel_size);
             index->items[x_index - 1] = y;
             index->items[x_index] = x;
-            float value = tt_getindex(
-                self->parents[0],
-                index); // backprop is dependent on tensors staying
-            if (value > max) { // if equal, its the first one.
-              if (max != -INFINITY) tt_setindex(pooled_grads, max_index, 0);
+            float value =
+                tt_getindex(self->parents[0],
+                            index); // backprop is dependent on tensors staying
+            if (value > max) {      // if equal, its the first one.
+              if (max != -INFINITY)
+                tt_setindex(pooled_grads, max_index, 0);
               max = value;
               ttuple_free(max_index);
               max_index = ttuple_copy(index);
@@ -825,7 +827,8 @@ void _maxpool2d_backwards(tt *self) {
   ttuple_free(index);
 
   tt *expanded_by_pooled_grads = tt_mul(expanded_self_grad, pooled_grads);
-  tt *accumulated_grads = tt_add(self->parents[0]->grads, expanded_by_pooled_grads);
+  tt *accumulated_grads =
+      tt_add(self->parents[0]->grads, expanded_by_pooled_grads);
   tt_free(expanded_self_grad);
   tt_free(pooled_grads);
   self->parents[0]->grads = accumulated_grads;
@@ -902,5 +905,106 @@ tt *tt_maxpool2d(tt *input, int kernel_size) {
     }
   }
   ttuple_free(index);
+  return output;
+}
+
+void _conv2d_backwards(tt *self) {
+  // input gradients
+  if (self->parents[0]->requires_grad) {
+  }
+
+  // kernel gradients
+  if (self->parents[1]->requires_grad) {
+  }
+}
+
+// dilation = 1, stride = 1, padding = 0,
+// bias = false (just use add if you want a bias
+// works only for input=4d, kernels=4d
+// kernel shape: (cout, cin, kernelsize, kernelsize)
+// input shape: (batch size, cin, hin, win)
+// output shape: (batch size, cout, hout, wout)
+tt *tt_conv2d(tt *input, tt *kernels) {
+
+  ttuple *input_shape = input->view->shape;
+  assert(input_shape->size == 4);
+
+  ttuple *kernels_shape = kernels->view->shape;
+  assert(kernels_shape->size == 4);
+
+  ttuple_print(input_shape);
+  ttuple_print(kernels_shape);
+
+  assert(kernels_shape->items[1] == input_shape->items[1]);
+  assert(kernels_shape->items[2] == kernels_shape->items[3]);
+
+  int batch_size = input_shape->items[0];
+  int cout = kernels_shape->items[0];
+  int cin = input_shape->items[1];
+  int kernel_size = kernels_shape->items[3];
+
+  int hin = input_shape->items[2];
+  int win = input_shape->items[3];
+
+  int wout = win - kernel_size + 1;
+  int hout = hin - kernel_size + 1;
+
+  ttuple *out_shape = ttuple_build(4, batch_size, cout, hout, wout);
+
+  bool requires_grad = input->requires_grad || kernels->requires_grad;
+
+  tt **parents = NULL;
+  if (requires_grad) {
+    parents = (tt **)malloc(top_radix(CONV_2D) * sizeof(tt *));
+    parents[0] = input;
+    parents[1] = kernels;
+  }
+
+  tt *output = tt_zeros(out_shape, requires_grad);
+  output->parents = parents;
+  output->op = CONV_2D;
+  output->_backwards = &_conv2d_backwards;
+
+  // conv
+  ttuple *input_index = ttuple_zeros(4);
+  ttuple *kernel_index = ttuple_zeros(4);
+  ttuple *output_index = ttuple_zeros(4);
+  for (int b = 0; b < batch_size; b++) {
+    input_index->items[0] = b;
+    output_index->items[0] = b;
+    for (int co = 0; co < cout; co++) {
+      kernel_index->items[0] = co;
+      output_index->items[1] = co;
+      for (int h = 0; h < hin - kernel_size + 1; h++) {
+        output_index->items[2] = h;
+        for (int w = 0; w < win - kernel_size + 1; w++) {
+          output_index->items[3] = w;
+          float sum = 0;
+          for (int ci = 0; ci < cin; ci++) {
+            kernel_index->items[1] = ci;
+            input_index->items[1] = ci;
+            for (int k = 0; k < kernel_size * kernel_size; k++) {
+              int kh = k / kernel_size;
+              int kw = k % kernel_size;
+              input_index->items[2] = h + kh;
+              kernel_index->items[2] = kh;
+
+              input_index->items[3] = w + kw;
+              kernel_index->items[3] = kw;
+
+              float kernel_value = tt_getindex(kernels, kernel_index);
+              float input_value = tt_getindex(input, input_index);
+              sum += input_value * kernel_value;
+            }
+          }
+          tt_setindex(output, output_index, sum);
+        }
+      }
+    }
+  }
+  ttuple_free(input_index);
+  ttuple_free(output_index);
+  ttuple_free(kernel_index);
+
   return output;
 }

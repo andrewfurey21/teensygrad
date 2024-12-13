@@ -13,7 +13,7 @@
 // variable shapes etc.
 // add to hl_ops or something.
 // need to free stuff in function if not being used later.
-tt* linear_layer(tt* a, tt* b) {
+tt* linear_layer(tt* a, tt* b, bool training) {
     ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
     tt* reshape_a = tt_reshape(a, reshape_a_shape);
 
@@ -31,6 +31,16 @@ tt* linear_layer(tt* a, tt* b) {
     tt* reshaped_dot = tt_reshape(dot, reshaped_dot_shape);
 
     tt* dot_sum = tt_sum(reshaped_dot, -1);
+
+    if (!training) {
+        tt_free(reshape_a);
+        tt_free(reshape_b);
+        tt_free(expand_a);
+        tt_free(expand_b);
+        tt_free(mul);
+        tt_free(dot);
+        tt_free(reshaped_dot);
+    }
 
     return dot_sum;
 }
@@ -54,14 +64,16 @@ tt* flatten(tt* input, int start_dim) {
 int main(void) {
     srand(time(NULL));
 
-    ttuple* shape = ttuple_build(4, 3, 2, 4, 4);
-    tt* input = tt_linspace(shape, 0, 3*2*4*4, true);
-    tt* pool = tt_maxpool2d(input, 2);
-    tt* sum = tt_sum(pool, -1);
+    ttuple* input_shape = ttuple_build(4, 1, 4, 2, 2);
+    ttuple* kernel_shape = ttuple_build(4, 2, 4, 2, 2);
+    tt* input = tt_linspace(input_shape, 0, 1*4*2*2, false);
+    tt* kernels = tt_linspace(kernel_shape, 0, 2*4*2*2, false);
 
-    tgraph* net = tgraph_build(sum);
-    tgraph_zeroed(net);
-    tgraph_backprop(net);
 
-    tgraph_print(net, false, true);
+    tt* conved = tt_conv2d(input, kernels);
+
+    ttuple_print(conved->view->shape);
+    tt_print(input, false, false);
+    tt_print(kernels, false, false);
+    tt_print(conved, false, false);
 }
