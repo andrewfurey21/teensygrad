@@ -23,7 +23,7 @@ My approach was building a small set of base operations that can be used to buil
     - [x] expand
     - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
     - [x] flatten (just a reshape)
-    - [ ] max pool
+    - [x] max pool
     - [ ] convolutions
     - [ ] batch norm (indirectly, using add and mul)
     - [ ] sparse categorical cross entropy
