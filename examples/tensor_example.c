@@ -60,16 +60,30 @@ tt *flatten(tt *input, int start_dim) {
   return flattened;
 }
 
+tt *mean(tt* input, int axis) {
+  int size;
+  if (axis == -1) {
+    size = ttuple_prod(input->view->shape);
+  } else {
+    size = input->view->shape->items[axis];
+  }
+  tt* summed = tt_sum(input, axis);
+  tt* div = tt_fill(summed->view->shape, 1.0f / size, input->requires_grad);
+  return tt_mul(summed, div);
+}
+
 int main(void) {
   srand(time(NULL));
 
-  int batch_size = 16;
+  ttuple* shape = ttuple_build(2, 16, 1);
+  tt* input = tt_linspace(shape, 0, 9, 16*1, true);
 
-  ttuple *input_shape = ttuple_build(2, batch_size, 576);
-  tt *input = tt_linspace(input_shape, 0, 10, batch_size * 576, true);
-  
-  ttuple *weights_shape = ttuple_build(2, 576, 10);
-  tt *weights = tt_linspace(weights_shape, 0, 10, 576*10, true);
-  
-  tt *mm = linear_layer(input, weights);
+  tt* avg = mean(input, -1);
+
+  tgraph* comp_graph = tgraph_build(avg);
+  tgraph_zeroed(comp_graph);
+  tgraph_backprop(comp_graph);
+
+  tt_print(avg, true, true);
+  tt_print(input, true, true);
 }

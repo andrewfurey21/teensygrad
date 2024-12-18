@@ -289,6 +289,8 @@ void tt_print(tt *t, bool no_buffer, bool show_grads) {
     printf("]\n");
   }
   if (t->requires_grad && show_grads) {
+    printf("gradient shape: ");
+    ttuple_print(t->grads->view->shape);
     printf("gradient values: [ ");
     for (int i = 0; i < t->grads->data->size; i++) {
       printf("%f, ", t->grads->data->buffer[i]);
