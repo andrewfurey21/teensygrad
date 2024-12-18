@@ -21,7 +21,7 @@ My approach was building a small set of base operations that can be used to buil
     - [x] relu
     - [x] reshape
     - [x] expand
-    - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
+    - [x] matmul/dot
     - [x] flatten (just a reshape)
     - [x] max pool
     - [ ] convolutions

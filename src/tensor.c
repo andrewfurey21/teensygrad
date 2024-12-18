@@ -1008,3 +1008,73 @@ tt *tt_conv2d(tt *input, tt *kernels) {
 
   return output;
 }
+
+void _matmul_backwards(tt* self) {
+  //input
+  if (self->parents[0]->requires_grad) {
+
+  }
+
+  //other
+  if (self->parents[1]->requires_grad) {
+  }
+}
+
+//only works for 2d
+tt* tt_matmul(tt* input, tt* other) {
+
+  assert(input->view->shape->size == 2);
+  assert(other->view->shape->size == 2);
+
+  int width_input = input->view->shape->items[1];
+  int height_input = input->view->shape->items[0];
+
+  int width_output = other->view->shape->items[1];
+  int height_output = other->view->shape->items[0];
+
+  assert(width_input == height_output);
+
+  ttuple* output_shape = ttuple_zeros(2);
+  output_shape->items[0] = height_input;
+  output_shape->items[1] = width_output;
+
+  bool requires_grad = input->requires_grad || other->requires_grad;
+  tt** parents = NULL;
+  if (requires_grad) {
+    parents = (tt **)malloc(top_radix(MATMUL) * sizeof(tt *));
+    parents[0] = input;
+    parents[1] = other;
+  }
+
+  tt* output = tt_zeros(output_shape, requires_grad);
+  output->parents = parents;
+  output->op = MATMUL;
+  output->_backwards = &_matmul_backwards;
+
+  ttuple* input_index = ttuple_zeros(2);
+  ttuple* output_index = ttuple_zeros(2);
+  ttuple* other_index = ttuple_zeros(2);
+
+  for (int hi = 0; hi < height_input; hi++) {
+    input_index->items[0] = hi;
+    output_index->items[0] = hi;
+    for (int wo = 0; wo < width_output; wo++) {
+      other_index->items[1] = wo;
+      output_index->items[1] = wo;
+      for (int i = 0; i < width_input; i++) {
+        other_index->items[0] = i;
+        input_index->items[1] = i;
+        float input_value = tt_getindex(input, input_index);
+        float other_value = tt_getindex(other, other_index);
+        float output_value = tt_getindex(output, output_index);
+
+        tt_setindex(output, output_index, output_value + input_value * other_value);
+      }
+    }
+  }
+  ttuple_free(input_index);
+  ttuple_free(output_index);
+  ttuple_free(other_index);
+
+  return output;
+}
