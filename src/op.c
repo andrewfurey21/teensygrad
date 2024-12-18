@@ -12,10 +12,15 @@ size_t top_radix(enum top op) {
   case RESHAPE:
   case EXPAND:
   case MAX_POOL_2D:
+  case SQUARE:
+  case SQRT:
+  case EXP:
+  case LOG:
     return 1;
   case ADD:
   case MUL:
   case CONV_2D:
+  case DIV:
     return 2;
   default:
     assert(false && "This op is not implemented.");
@@ -52,7 +57,10 @@ void print_op_string(enum top op) {
     printf("MAX POOL 2D\n");
     return;
   case CONV_2D:
-    printf("MAX POOL 2D\n");
+    printf("CONV 2D\n");
+    return;
+  case SQUARE:
+    printf("SQUARE\n");
     return;
   default:
     assert(false && "This op is not implemented.");

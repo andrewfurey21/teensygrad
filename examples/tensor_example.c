@@ -68,22 +68,22 @@ tt *mean(tt* input, int axis) {
     size = input->view->shape->items[axis];
   }
   tt* summed = tt_sum(input, axis);
-  tt* div = tt_fill(summed->view->shape, 1.0f / size, input->requires_grad);
+  tt* div = tt_fill(summed->view->shape, 1.0f / size, true);
   return tt_mul(summed, div);
 }
 
 int main(void) {
   srand(time(NULL));
 
-  ttuple* shape = ttuple_build(2, 16, 1);
-  tt* input = tt_linspace(shape, 0, 9, 16*1, true);
+  ttuple* shape = ttuple_build(2, 2, 2);
+  tt* input = tt_linspace(shape, 0, 9, 4, true);
+  tt* squared = tt_square(input);
 
-  tt* avg = mean(input, -1);
+  tt* sum = mean(squared, -1);
 
-  tgraph* comp_graph = tgraph_build(avg);
+  tgraph* comp_graph = tgraph_build(sum);
   tgraph_zeroed(comp_graph);
   tgraph_backprop(comp_graph);
 
-  tt_print(avg, true, true);
-  tt_print(input, true, true);
+  tgraph_print(comp_graph, false, true);
 }

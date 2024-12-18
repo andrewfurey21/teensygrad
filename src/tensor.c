@@ -1011,3 +1011,32 @@ tt *tt_conv2d(tt *input, tt *kernels) {
 
   return output;
 }
+
+
+void _square_backwards(tt* self) {
+  tt* twos = tt_fill(self->view->shape, 2, false);
+  tt* grads = tt_mul(twos, self->parents[0]);// TODO: parents might have grads, so need to clear grads->grads later
+  tt* mul_self_grads = tt_mul(grads, self->grads);
+  tt* acc_grads = tt_add(mul_self_grads, self->parents[0]->grads);
+  tt_free(self->parents[0]->grads);
+  tt_free(twos);
+  tt_free(grads);
+  self->parents[0]->grads = acc_grads;
+}
+
+tt* tt_square(tt* input) {
+  tt** parents = NULL;
+  if (input->requires_grad) {
+    parents = (tt**)malloc(top_radix(SQUARE) * sizeof(tt*));
+    parents[0] = input;
+  }
+
+  tt *t = tt_zeros(input->view->shape, input->requires_grad);
+  t->parents = parents;
+  t->op = SQUARE;
+  t->_backwards = &_square_backwards;
+  for (uint64_t i = 0; i < input->data->size; i++) {
+    t->data->buffer[i]= pow(input->data->buffer[i], 2);
+  }
+  return t;
+}

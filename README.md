@@ -15,17 +15,15 @@ My approach was building a small set of base operations that can be used to buil
 - [x] tensor
 - [x] backwards mode autodifferentiation
 - [ ] ops
-    - [x] add
-    - [x] mul
-    - [x] sum along an axis
+    - [x] add/sub, mul/div
+    - [x] square, sqrt
+    - [x] reshape, flatten (just a reshape)
+    - [x] sum/expand along axis
     - [x] relu
-    - [x] reshape
-    - [x] expand
     - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
-    - [x] flatten (just a reshape)
     - [x] max pool
     - [ ] convolutions
-    - [ ] batch norm (indirectly, using add and mul)
+    - [ ] batch norm
     - [ ] sparse categorical cross entropy
 - [ ] adam optimizer
 - [ ] import/export weights
@@ -73,9 +71,10 @@ Convolutions are done manually for the moment.
 
 ## future ideas
 
-- different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
-- other convolution implementations (singular value decomposition, FFT, winograd)
-- different types (bfloat, mx-compliant)
-- python bindings
+- broadcasting, proper views.
 - could totally do a refactor, might be nice to have a context like ggml
 - could do permute+pad op then i think convs/maxpools could done indirectly as well
+- different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
+- choose different types (double, f16, bfloat, mx-compliant)
+- other convolution implementations (singular value decomposition, FFT, winograd)
+- python bindings

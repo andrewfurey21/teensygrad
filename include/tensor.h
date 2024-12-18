@@ -19,6 +19,11 @@ enum top { // need enough for: conv, batchnorm, maxpool, linear
   MUL,
   MAX_POOL_2D,
   CONV_2D,
+  SQUARE,
+  SQRT,
+  DIV,
+  EXP,
+  LOG,
 };
 
 size_t top_radix(enum top);
@@ -88,7 +93,7 @@ void tt_print(tt *t, bool no_buffer, bool show_grads);
 tt *tt_view(tt *tensor, tview *view);
 void tt_free(tt *t);
 
-// base ops
+// ops
 tt *tt_add(tt *a, tt *b);
 tt *tt_mul(tt *a, tt *b);
 tt *tt_sum(tt *a, int axis);
@@ -97,6 +102,7 @@ tt *tt_reshape(tt *a, ttuple *new_shape);
 tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
 tt *tt_maxpool2d(tt *input, int kernel_size);
 tt *tt_conv2d(tt *input, tt *kernels);
+tt* tt_square(tt* input);
 
 // computational graph
 typedef struct {
