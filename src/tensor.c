@@ -207,10 +207,11 @@ tt *tt_fill(ttuple *s, float fill_value, bool requires_grad) {
   return t;
 }
 
-tt *tt_linspace(ttuple *s, float min, float max, bool requires_grad) {
+tt *tt_linspace(ttuple *s, float min, float max, int steps, bool requires_grad) {
+  assert(steps == ttuple_prod(s));
   tt *t = tt_zeros(s, requires_grad);
   for (uint64_t i = 0; i < t->data->size; i++) {
-    float value = (max - min) / (float)t->data->size * i + min;
+    float value = min + i * ((max - min) / (steps - 1));
     tstorage_setitem(t->data, i, value);
   }
   return t;
@@ -342,7 +343,7 @@ void _add_backwards(tt *self) {
 tt *tt_add(tt *a, tt *b) {
   assert(ttuple_equal(a->view->shape, b->view->shape) &&
          "Tensors are not the same shape.");
-  ttuple *copy = ttuple_copy(a->view->shape);
+  ttuple *copy = ttuple_copy(a->view->shape);//TODO: free copy??
   bool requires_grad = a->requires_grad || b->requires_grad;
 
   tt **parents = NULL;
@@ -936,6 +937,7 @@ tt *tt_conv2d(tt *input, tt *kernels) {
   ttuple_print(kernels_shape);
 
   assert(kernels_shape->items[1] == input_shape->items[1]);
+  //must be square
   assert(kernels_shape->items[2] == kernels_shape->items[3]);
 
   int batch_size = input_shape->items[0];
@@ -965,7 +967,6 @@ tt *tt_conv2d(tt *input, tt *kernels) {
   output->op = CONV_2D;
   output->_backwards = &_conv2d_backwards;
 
-  // conv
   ttuple *input_index = ttuple_zeros(4);
   ttuple *kernel_index = ttuple_zeros(4);
   ttuple *output_index = ttuple_zeros(4);

@@ -1,79 +1,75 @@
 #include "../include/tensor.h"
+#include "assert.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "assert.h"
 #include <stdint.h>
 #include <time.h>
 
 // TODO:
-// encapsulating ops with functions is broken, i dont think gradients flow correcly.
-// check summing with (2, 1, 1) or something with ones
-// get name of linspace/arange correct
-// get this working correctly, compare with proper tinygrad/pytorch impl
-// variable shapes etc.
-// add to hl_ops or something.
-// need to free stuff in function if not being used later.
-tt* linear_layer(tt* a, tt* b, bool training) {
-    ttuple* reshape_a_shape = ttuple_build(3, 1, 4, 3);
-    tt* reshape_a = tt_reshape(a, reshape_a_shape);
+// encapsulating ops with functions is broken, i dont think gradients flow
+// correcly. check summing with (2, 1, 1) or something with ones get name of
+// linspace/arange correct get this working correctly, compare with proper
+// tinygrad/pytorch impl variable shapes etc. add to hl_ops or something. need
+// to free stuff in function if not being used later. use getenv for batchsize,
+// learning_rate, etc other params
 
-    ttuple* reshape_b_shape = ttuple_build(3, 5, 4, 1);
-    tt* reshape_b = tt_reshape(b, reshape_b_shape);
+// 2d matmul
+tt *linear_layer(tt *input, tt *weights) {
+  int input_width = input->view->shape->items[1];
+  int input_height = input->view->shape->items[0];
 
-    tt* expand_a = tt_expand(reshape_a, 0, 5);
-    tt* expand_b = tt_expand(reshape_b, 2, 3);
+  int weights_width = weights->view->shape->items[1];
+  int weights_height = weights->view->shape->items[0];
 
-    tt* mul = tt_mul(expand_a, expand_b);
+  assert(input_width == weights_height);
 
-    tt* dot = tt_sum(mul, 1);
+  ttuple *new_input_shape = ttuple_build(3, input_height, input_width, 1);
+  tt *reshaped_input = tt_reshape(input, new_input_shape);
 
-    ttuple* reshaped_dot_shape = ttuple_build(2, 5, 3);
-    tt* reshaped_dot = tt_reshape(dot, reshaped_dot_shape);
+  ttuple *new_weights_shape = ttuple_build(3, 1, weights_height, weights_width);
+  tt *reshaped_weights = tt_reshape(weights, new_weights_shape);
 
-    tt* dot_sum = tt_sum(reshaped_dot, -1);
+  tt *expanded_input = tt_expand(reshaped_input, 2, weights_width);
+  tt *expanded_weights = tt_expand(reshaped_weights, 0, input_height);
 
-    if (!training) {
-        tt_free(reshape_a);
-        tt_free(reshape_b);
-        tt_free(expand_a);
-        tt_free(expand_b);
-        tt_free(mul);
-        tt_free(dot);
-        tt_free(reshaped_dot);
-    }
+  tt *mul = tt_mul(expanded_input, expanded_weights);
 
-    return dot_sum;
+  tt *output = tt_sum(mul, 1);
+
+  ttuple *new_output_shape = ttuple_zeros(2);
+  new_output_shape->items[0] = output->view->shape->items[0];
+  new_output_shape->items[1] = output->view->shape->items[2];
+
+  tt *reshaped_output = tt_reshape(output, new_output_shape);
+  return reshaped_output;
 }
 
-tt* flatten(tt* input, int start_dim) {
-    assert(start_dim >= 0 && start_dim < input->view->shape->size);
-    ttuple* new_shape = ttuple_zeros(start_dim+1);
-    uint64_t end = 1;
-    for (int i = 0; i < input->view->shape->size; i++) {
-        if (i >= start_dim) {
-            end *= input->view->shape->items[i];
-        } else {
-            new_shape->items[i] = input->view->shape->items[i];
-        }
+tt *flatten(tt *input, int start_dim) {
+  assert(start_dim >= 0 && start_dim < input->view->shape->size);
+  ttuple *new_shape = ttuple_zeros(start_dim + 1);
+  uint64_t end = 1;
+  for (int i = 0; i < input->view->shape->size; i++) {
+    if (i >= start_dim) {
+      end *= input->view->shape->items[i];
+    } else {
+      new_shape->items[i] = input->view->shape->items[i];
     }
-    new_shape->items[start_dim] = end;
-    tt* flattened = tt_reshape(input, new_shape);
-    return flattened;
+  }
+  new_shape->items[start_dim] = end;
+  tt *flattened = tt_reshape(input, new_shape);
+  return flattened;
 }
 
 int main(void) {
-    srand(time(NULL));
+  srand(time(NULL));
 
-    ttuple* input_shape = ttuple_build(4, 1, 4, 2, 2);
-    ttuple* kernel_shape = ttuple_build(4, 2, 4, 2, 2);
-    tt* input = tt_linspace(input_shape, 0, 1*4*2*2, false);
-    tt* kernels = tt_linspace(kernel_shape, 0, 2*4*2*2, false);
+  int batch_size = 16;
 
-
-    tt* conved = tt_conv2d(input, kernels);
-
-    ttuple_print(conved->view->shape);
-    tt_print(input, false, false);
-    tt_print(kernels, false, false);
-    tt_print(conved, false, false);
+  ttuple *input_shape = ttuple_build(2, batch_size, 576);
+  tt *input = tt_linspace(input_shape, 0, 10, batch_size * 576, true);
+  
+  ttuple *weights_shape = ttuple_build(2, 576, 10);
+  tt *weights = tt_linspace(weights_shape, 0, 10, 576*10, true);
+  
+  tt *mm = linear_layer(input, weights);
 }
