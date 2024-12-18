@@ -329,14 +329,14 @@ void tt_destroy_grads(tt *t) {
 void _add_backwards(tt *self) {
   if (self->parents[0]->requires_grad) {
     tt *grads_0 = tt_add(self->grads, self->parents[0]->grads);
-    tt_destroy_grads(grads_0);
+    // tt_destroy_grads(grads_0); // TODO: check if grads before doing
     tt_free(self->parents[0]->grads);
     self->parents[0]->grads = grads_0;
   }
 
   if (self->parents[1]->requires_grad) {
     tt *grads_1 = tt_add(self->grads, self->parents[1]->grads);
-    tt_destroy_grads(grads_1);
+    // tt_destroy_grads(grads_1);
     tt_free(self->parents[1]->grads);
     self->parents[1]->grads = grads_1;
   }
@@ -361,6 +361,45 @@ tt *tt_add(tt *a, tt *b) {
   t->_backwards = &_add_backwards;
   for (uint64_t i = 0; i < a->data->size; i++) {
     t->data->buffer[i] = a->data->buffer[i] + b->data->buffer[i];
+  }
+  return t;
+}
+
+void _sub_backwards(tt *self) {
+  if (self->parents[0]->requires_grad) {
+    tt *grads_0 = tt_add(self->grads, self->parents[0]->grads);
+    // tt_destroy_grads(grads_0);
+    tt_free(self->parents[0]->grads);
+    self->parents[0]->grads = grads_0;
+  }
+
+  if (self->parents[1]->requires_grad) {
+    tt *grads_1 = tt_sub(self->grads, self->parents[1]->grads);
+    // tt_destroy_grads(grads_1);
+    tt_free(self->parents[1]->grads);
+    self->parents[1]->grads = grads_1;
+  }
+}
+
+tt *tt_sub(tt *a, tt *b) {
+  assert(ttuple_equal(a->view->shape, b->view->shape) &&
+         "Tensors are not the same shape.");
+  ttuple *copy = ttuple_copy(a->view->shape);//TODO: free copy??
+  bool requires_grad = a->requires_grad || b->requires_grad;
+
+  tt **parents = NULL;
+  if (requires_grad) {
+    parents = (tt **)malloc(top_radix(SUB) * sizeof(tt *));
+    parents[0] = a;
+    parents[1] = b;
+  }
+
+  tt *t = tt_zeros(copy, requires_grad);
+  t->parents = parents;
+  t->op = SUB;
+  t->_backwards = &_sub_backwards;
+  for (uint64_t i = 0; i < a->data->size; i++) {
+    t->data->buffer[i] = a->data->buffer[i] - b->data->buffer[i];
   }
   return t;
 }

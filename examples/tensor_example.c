@@ -11,7 +11,7 @@
 // linspace/arange correct get this working correctly, compare with proper
 // tinygrad/pytorch impl variable shapes etc. add to hl_ops or something. need
 // to free stuff in function if not being used later. use getenv for batchsize,
-// learning_rate, etc other params
+// learning_rate, etc other params. add training param to each function
 
 // 2d matmul
 tt *linear_layer(tt *input, tt *weights) {
@@ -72,13 +72,17 @@ tt *mean(tt* input, int axis) {
   return tt_mul(summed, div);
 }
 
+// tt *log_softmax(tt* input, int axis) {
+// }
+
 int main(void) {
   srand(time(NULL));
 
-  ttuple* shape = ttuple_build(2, 2, 2);
-  tt* input = tt_linspace(shape, 1, 9, 4, true);
+  ttuple* shape = ttuple_build(2, 2, 5);
+  tt* input = tt_linspace(shape, 1, 9, 10, true);
+  tt* other = tt_linspace(shape, -10, 9, 10, true);
 
-  tt* squared = tt_log(input);
+  tt* squared = tt_sub(input, other);
 
   tt* sum = mean(squared, -1);
   tgraph* comp_graph = tgraph_build(sum);

@@ -15,7 +15,7 @@ My approach was building a small set of base operations that can be used to buil
 - [x] tensor
 - [x] backwards mode autodifferentiation
 - [ ] ops
-    - [x] add/sub, mul/div
+    - [x] add/sub, mul
     - [x] square, sqrt, log, exp
     - [x] reshape, flatten (just a reshape)
     - [x] sum/expand along axis

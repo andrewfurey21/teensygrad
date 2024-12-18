@@ -11,13 +11,14 @@
 enum top { // need enough for: conv, batchnorm, maxpool, linear
   NOOP = 0,
   RELU,
-  NEG,
   SUM_REDUCE,
   RESHAPE,
   EXPAND,
   ADD,
+  SUB,
   MUL,
   MAX_POOL_2D,
+  NEG,
   CONV_2D,
   SQUARE,
   SQRT,
@@ -94,11 +95,12 @@ void tt_free(tt *t);
 
 // ops
 tt *tt_add(tt *a, tt *b);
+tt *tt_sub(tt *a, tt *b);
 tt *tt_mul(tt *a, tt *b);
-tt *tt_div(tt *a, tt *b);
 tt *tt_sum(tt *a, int axis);
 tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
+tt *tt_neg(tt *a);
 tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
 tt *tt_maxpool2d(tt *input, int kernel_size);
 tt *tt_conv2d(tt *input, tt *kernels);
