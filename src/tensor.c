@@ -1096,4 +1096,31 @@ tt* tt_exp(tt* input) {
   return t;
 }
 
+void _log_backwards(tt* self) {
+  tt* copy_input = tt_zeros(self->parents[0]->view->shape, false);
+  for (int i = 0; i < copy_input->data->size; i++) {
+    copy_input->data->buffer[i] = 1.0f / self->parents[0]->data->buffer[i];
+  }
+  tt* mul = tt_mul(copy_input, self->grads);//TODO: this grad might have grads now
+  tt* acc_grads = tt_add(mul, self->parents[0]->grads);
+  tt_free(self->parents[0]->grads);
+  tt_free(mul);
+  tt_free(copy_input);
+  self->parents[0]->grads = acc_grads;
+}
 
+tt* tt_log(tt* input) {
+  tt** parents = NULL;
+  if (input->requires_grad) {
+    parents = (tt**)malloc(top_radix(LOG) * sizeof(tt*));
+    parents[0] = input;
+  }
+  tt *t = tt_zeros(input->view->shape, input->requires_grad);
+  t->parents = parents;
+  t->op = LOG;
+  t->_backwards = &_log_backwards;
+  for (uint64_t i = 0; i < input->data->size; i++) {
+    t->data->buffer[i] = logf(input->data->buffer[i]);
+  }
+  return t;
+}

@@ -26,6 +26,7 @@ size_t top_radix(enum top op) {
   }
 }
 
+// TODO: theres gota be a macro for this right?
 void print_op_string(enum top op) {
   switch (op) {
   case NOOP:
@@ -66,6 +67,9 @@ void print_op_string(enum top op) {
     return;
   case EXP:
     printf("EXP\n");
+    return;
+  case LOG:
+    printf("LOG\n");
     return;
   default:
     assert(false && "This op is not implemented.");

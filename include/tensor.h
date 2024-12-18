@@ -95,6 +95,7 @@ void tt_free(tt *t);
 // ops
 tt *tt_add(tt *a, tt *b);
 tt *tt_mul(tt *a, tt *b);
+tt *tt_div(tt *a, tt *b);
 tt *tt_sum(tt *a, int axis);
 tt *tt_relu(tt *a);
 tt *tt_reshape(tt *a, ttuple *new_shape);
@@ -104,6 +105,7 @@ tt *tt_conv2d(tt *input, tt *kernels);
 tt* tt_square(tt* input);
 tt* tt_sqrt(tt* input);
 tt* tt_exp(tt* input);
+tt* tt_log(tt* input);
 
 // computational graph
 typedef struct {
