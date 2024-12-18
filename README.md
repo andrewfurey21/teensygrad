@@ -71,9 +71,9 @@ Convolutions are done manually for the moment.
 
 ## future ideas
 
-- broadcasting, proper views.
+- broadcasting, proper views, strides, proper storage abstraction (like numpy)
 - could totally do a refactor, might be nice to have a context like ggml
-- could do permute+pad op then i think convs/maxpools could done indirectly as well
+- could do permute+pad op, then redo maxpools/convs
 - different backends (opencl/vulkan, cuda, metal, avx/sse, triton, rocm, tenstorrent)
 - more example models (yolo, gpt, sam etc)
 - choose different types (double, f16, bfloat, mx-compliant)

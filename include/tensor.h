@@ -21,7 +21,6 @@ enum top { // need enough for: conv, batchnorm, maxpool, linear
   CONV_2D,
   SQUARE,
   SQRT,
-  DIV,
   EXP,
   LOG,
 };
@@ -104,6 +103,7 @@ tt *tt_maxpool2d(tt *input, int kernel_size);
 tt *tt_conv2d(tt *input, tt *kernels);
 tt* tt_square(tt* input);
 tt* tt_sqrt(tt* input);
+tt* tt_exp(tt* input);
 
 // computational graph
 typedef struct {

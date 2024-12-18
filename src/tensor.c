@@ -1071,3 +1071,29 @@ tt* tt_sqrt(tt* input) {
   }
   return t;
 }
+
+void _exp_backwards(tt* self) {
+  tt* mul = tt_mul(self, self->grads);//TODO: this grad might have grads now
+  tt* acc_grads = tt_add(mul, self->parents[0]->grads);
+  tt_free(self->parents[0]->grads);
+  tt_free(mul);
+  self->parents[0]->grads = acc_grads;
+}
+
+tt* tt_exp(tt* input) {
+  tt** parents = NULL;
+  if (input->requires_grad) {
+    parents = (tt**)malloc(top_radix(EXP) * sizeof(tt*));
+    parents[0] = input;
+  }
+  tt *t = tt_zeros(input->view->shape, input->requires_grad);
+  t->parents = parents;
+  t->op = EXP;
+  t->_backwards = &_exp_backwards;
+  for (uint64_t i = 0; i < input->data->size; i++) {
+    t->data->buffer[i] = exp(input->data->buffer[i]);
+  }
+  return t;
+}
+
+

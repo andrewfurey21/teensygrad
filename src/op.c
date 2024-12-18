@@ -20,7 +20,6 @@ size_t top_radix(enum top op) {
   case ADD:
   case MUL:
   case CONV_2D:
-  case DIV:
     return 2;
   default:
     assert(false && "This op is not implemented.");
@@ -64,6 +63,9 @@ void print_op_string(enum top op) {
     return;
   case SQRT:
     printf("SQRT\n");
+    return;
+  case EXP:
+    printf("EXP\n");
     return;
   default:
     assert(false && "This op is not implemented.");

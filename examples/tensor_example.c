@@ -77,7 +77,7 @@ int main(void) {
 
   ttuple* shape = ttuple_build(2, 2, 2);
   tt* input = tt_linspace(shape, 1, 9, 4, true);
-  tt* squared = tt_sqrt(input);
+  tt* squared = tt_exp(input);
   //
   tt* sum = mean(squared, -1);
   //
