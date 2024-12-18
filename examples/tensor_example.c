@@ -76,14 +76,14 @@ int main(void) {
   srand(time(NULL));
 
   ttuple* shape = ttuple_build(2, 2, 2);
-  tt* input = tt_linspace(shape, 0, 9, 4, true);
-  tt* squared = tt_square(input);
-
+  tt* input = tt_linspace(shape, 1, 9, 4, true);
+  tt* squared = tt_sqrt(input);
+  //
   tt* sum = mean(squared, -1);
-
+  //
   tgraph* comp_graph = tgraph_build(sum);
   tgraph_zeroed(comp_graph);
   tgraph_backprop(comp_graph);
-
+  //
   tgraph_print(comp_graph, false, true);
 }

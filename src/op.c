@@ -62,6 +62,9 @@ void print_op_string(enum top op) {
   case SQUARE:
     printf("SQUARE\n");
     return;
+  case SQRT:
+    printf("SQRT\n");
+    return;
   default:
     assert(false && "This op is not implemented.");
   }

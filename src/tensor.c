@@ -935,9 +935,6 @@ tt *tt_conv2d(tt *input, tt *kernels) {
   ttuple *kernels_shape = kernels->view->shape;
   assert(kernels_shape->size == 4);
 
-  ttuple_print(input_shape);
-  ttuple_print(kernels_shape);
-
   assert(kernels_shape->items[1] == input_shape->items[1]);
   //must be square
   assert(kernels_shape->items[2] == kernels_shape->items[3]);
@@ -1037,6 +1034,40 @@ tt* tt_square(tt* input) {
   t->_backwards = &_square_backwards;
   for (uint64_t i = 0; i < input->data->size; i++) {
     t->data->buffer[i]= pow(input->data->buffer[i], 2);
+  }
+  return t;
+}
+
+void _sqrt_backwards(tt* self) {
+  tt* copy_input = tt_copy(self->parents[0], false);
+
+  for (int i = 0; i < copy_input->data->size; i++) {
+    copy_input->data->buffer[i] = pow(copy_input->data->buffer[i], -.5);
+  }
+  tt* halfs = tt_fill(self->view->shape, 1.0/2, false);
+  tt* grads = tt_mul(halfs, copy_input);
+  tt* mul_self_grads = tt_mul(grads, self->grads);
+  tt* acc_grads = tt_add(mul_self_grads, self->parents[0]->grads);
+  tt_free(copy_input);
+  tt_free(self->parents[0]->grads);
+  tt_free(halfs);
+  tt_free(grads);
+  tt_free(mul_self_grads);
+  self->parents[0]->grads = acc_grads;
+}
+
+tt* tt_sqrt(tt* input) {
+  tt** parents = NULL;
+  if (input->requires_grad) {
+    parents = (tt**)malloc(top_radix(SQRT)*sizeof(tt*));
+    parents[0] = input;
+  }
+  tt *t = tt_zeros(input->view->shape, input->requires_grad);
+  t->parents = parents;
+  t->op = SQRT;
+  t->_backwards = &_sqrt_backwards;
+  for (uint64_t i = 0; i < input->data->size; i++) {
+    t->data->buffer[i] = sqrtf(input->data->buffer[i]);
   }
   return t;
 }

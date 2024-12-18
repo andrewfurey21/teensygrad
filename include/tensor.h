@@ -103,6 +103,7 @@ tt *tt_expand(tt *a, uint64_t axis, uint64_t amount);
 tt *tt_maxpool2d(tt *input, int kernel_size);
 tt *tt_conv2d(tt *input, tt *kernels);
 tt* tt_square(tt* input);
+tt* tt_sqrt(tt* input);
 
 // computational graph
 typedef struct {
