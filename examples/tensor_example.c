@@ -72,22 +72,39 @@ tt *mean(tt* input, int axis) {
   return tt_mul(summed, div);
 }
 
-// tt *log_softmax(tt* input, int axis) {
-// }
+tt *log_softmax(tt* input, int axis) {
+  tt* exp = tt_exp(input);
+  tt* sum_exp = tt_sum(exp, axis);
+  tt* log_sum_exp = tt_log(sum_exp);
+  tt* expand_log_sum_exp = tt_expand(log_sum_exp, axis, input->view->shape->items[axis]);// would be fixed with broadcasting
+  return tt_sub(input, expand_log_sum_exp);
+}
 
 int main(void) {
   srand(time(NULL));
 
-  ttuple* shape = ttuple_build(2, 2, 5);
-  tt* input = tt_linspace(shape, 1, 9, 10, true);
-  tt* other = tt_linspace(shape, -10, 9, 10, true);
+  ttuple* shape = ttuple_build(4, 1, 1, 4, 4);
+  tt* input = tt_linspace(shape, 1, 16, 4*4, true);
 
-  tt* squared = tt_sub(input, other);
+  ttuple* kernel_shape = ttuple_build(4, 1, 1, 3, 3);
+  tt* kernels = tt_linspace(kernel_shape, 1, 9, 3*3, true);
 
-  tt* sum = mean(squared, -1);
+  tt* conv = tt_conv2d(input, kernels);
+  
+  tt* sum = tt_sum(conv, -1);
+
+  tt_print(input, false, false);
+  tt_print(kernels, false, false);
+  tt_print(conv, false, false);
+  tt_print(sum, false, false);
+  
   tgraph* comp_graph = tgraph_build(sum);
   tgraph_zeroed(comp_graph);
   tgraph_backprop(comp_graph);
-  tgraph_print(comp_graph, false, true);
+
+  tt_print(input->grads, false, false);
+  tt_print(kernels->grads, false, false);
+  tt_print(conv->grads, false, false);
+  tt_print(sum->grads, false, false);
 
 }

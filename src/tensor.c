@@ -24,6 +24,7 @@
 // refactor ttmaxpool2d backwards, so that its only the first 5 nested for loop
 // not both
 // refactor setting up tensors in ops with a function.
+// could probably calcualte dNext/dCurrent in forward pass, then mul by incoming gradient in backwards.
 
 tstorage *tstorage_new(uint64_t buffer_length) {
   float *buffer = (float *)calloc(buffer_length, sizeof(float));
@@ -951,12 +952,118 @@ tt *tt_maxpool2d(tt *input, int kernel_size) {
 }
 
 void _conv2d_backwards(tt *self) {
+  int batch_size = self->view->shape->items[0];
+  int cout = self->view->shape->items[1];
+  int cin = self->parents[0]->view->shape->items[1];
+  int win = self->parents[0]->view->shape->items[3];
+  int hin = self->parents[0]->view->shape->items[2];
+  int wout = self->view->shape->items[3];
+  int hout = self->view->shape->items[2];
+  int kernel_size = self->parents[1]->view->shape->items[3];
+
   // input gradients
+  // TODO: refactor into one
   if (self->parents[0]->requires_grad) {
+    tt* grads = tt_zeros(self->parents[0]->view->shape, false);
+    ttuple* input_grad_index = ttuple_zeros(4);
+    ttuple* kernel_index = ttuple_zeros(4);
+    ttuple* output_grad_index = ttuple_zeros(4);
+    for (int b = 0; b < batch_size; b++) {
+      input_grad_index->items[0] = b;
+      output_grad_index->items[0] = b;
+      for (int co = 0; co < cout; co++) {
+        output_grad_index->items[1] = co;
+        kernel_index->items[0] = co;
+        for (int h = 0; h < hin - kernel_size + 1; h++) {
+          output_grad_index->items[2] = h;
+          for (int w = 0; w < win - kernel_size + 1; w++) {
+            output_grad_index->items[3] = w;
+            for (int ci = 0; ci < cin; ci++) {
+              input_grad_index->items[1] = ci;
+              kernel_index->items[1] = ci;
+              for (int k = 0; k < kernel_size * kernel_size; k++) {
+                int kh = k / kernel_size;
+                int kw = k % kernel_size;
+
+                input_grad_index->items[2] = h + kh;
+                input_grad_index->items[3] = w + kw;
+
+                kernel_index->items[2] = kh;
+                kernel_index->items[3] = kw;
+
+                float current_value = tt_getindex(grads, input_grad_index);
+                float kernel_value = tt_getindex(self->parents[1], kernel_index);
+                float output_grad_value = tt_getindex(self->grads, output_grad_index);
+                float new_value = kernel_value * output_grad_value + current_value;
+                tt_setindex(grads, input_grad_index, new_value);
+              }
+            }
+          }
+        }
+      }
+    }
+    tt* acc_grads = tt_add(grads, self->parents[0]->grads);
+
+    tt_free(grads);
+    tt_free(self->parents[0]->grads);
+
+    ttuple_free(kernel_index);
+    ttuple_free(input_grad_index);
+    ttuple_free(output_grad_index);
+
+    self->parents[0]->grads = acc_grads;
   }
 
   // kernel gradients
   if (self->parents[1]->requires_grad) {
+    tt* grads = tt_zeros(self->parents[1]->view->shape, false);
+    ttuple* input_index = ttuple_zeros(4);
+    ttuple* kernel_grad_index = ttuple_zeros(4);
+    ttuple* output_grad_index = ttuple_zeros(4);
+    for (int b = 0; b < batch_size; b++) {
+      input_index->items[0] = b;
+      output_grad_index->items[0] = b;
+      for (int co = 0; co < cout; co++) {
+        output_grad_index->items[1] = co;
+        kernel_grad_index->items[0] = co;
+        for (int h = 0; h < hin - kernel_size + 1; h++) {
+          output_grad_index->items[2] = h;
+          for (int w = 0; w < win - kernel_size + 1; w++) {
+            output_grad_index->items[3] = w;
+            for (int ci = 0; ci < cin; ci++) {
+              kernel_grad_index->items[1] = ci;
+              input_index->items[1] = ci;
+              for (int k = 0; k < kernel_size * kernel_size; k++) {
+                int kh = k / kernel_size;
+                int kw = k % kernel_size;
+
+                input_index->items[2] = h + kh;
+                input_index->items[3] = w + kw;
+
+                kernel_grad_index->items[2] = kh;
+                kernel_grad_index->items[3] = kw;
+
+                float input_value = tt_getindex(self->parents[0], input_index);
+                float current_value = tt_getindex(grads, kernel_grad_index);
+                float output_grad_value = tt_getindex(self->grads, output_grad_index);
+                float new_value = input_value * output_grad_value + current_value;
+                tt_setindex(grads, kernel_grad_index, new_value);
+              }
+            }
+          }
+        }
+      }
+    }
+    tt* acc_grads = tt_add(grads, self->parents[1]->grads);
+
+    tt_free(grads);
+    tt_free(self->parents[1]->grads);
+
+    ttuple_free(kernel_grad_index);
+    ttuple_free(input_index);
+    ttuple_free(output_grad_index);
+
+    self->parents[1]->grads = acc_grads;
   }
 }
 
