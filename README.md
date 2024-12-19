@@ -2,13 +2,9 @@
 
 <!--  TODO: Show image of generated graph + mnist example  -->
 
-I built a small tensor library with automatic differentiation for deep learning.
+Zero-dependency tensor library with automatic differentiation for deep learning.
 
-This library has no dependencies, it's written from scratch in C.
-
-My approach was building a small set of base operations that can be used to build more complicated operations like matmul, sort of like tinygrad.
-
-<!-- TODO: compile mnist example with emscripten, host at mnist.andrew.industries -->
+My approach was building a small set of base operations that can be used to build more complicated operations like matmul, convs etc, sort of like tinygrad.
 
 ## current features
 
@@ -22,7 +18,7 @@ My approach was building a small set of base operations that can be used to buil
     - [x] relu
     - [x] matmul/dot (indirectly, using reshape, expand, mul and sum)
     - [x] max pool
-    - [ ] convolutions
+    - [x] convolutions
     - [ ] batch norm
     - [ ] sparse categorical cross entropy
 - [ ] sgd optimizer
@@ -49,21 +45,21 @@ There is no direct matmul op. You have to do it manually with a reshape, expand,
 
 <!-- TODO: show image from excalidraw doing matmul -->
 
-There is a function with all this behaviour though.
+Once I implement permute, it should just be transpose -> mul -> sum.
 
 ```c
 // TODO: give examples
 ```
 <!-- TODO: show image of graph of matmul -->
 
-There is also no direct batch norm op. You have to do it manually with add and mul.
+There is also no direct batch norm op. You have to do it manually.
 
 ```c
 // TODO: give examples
 ```
 <!-- TODO: show image of graph of batch norm -->
 
-Convolutions are done manually for the moment.
+Convolutions are implemented as there on kernel for the moment.
 
 ## examples
 
