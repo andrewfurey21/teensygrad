@@ -59,7 +59,7 @@ There is also no direct batch norm op. You have to do it manually.
 ```
 <!-- TODO: show image of graph of batch norm -->
 
-Convolutions are implemented as there on kernel for the moment.
+Convolutions are implemented as their on kernel for the moment.
 
 ## examples
 

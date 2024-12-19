@@ -375,7 +375,7 @@ void _sub_backwards(tt *self) {
   }
 
   if (self->parents[1]->requires_grad) {
-    tt *grads_1 = tt_sub(self->grads, self->parents[1]->grads);
+    tt *grads_1 = tt_sub(self->parents[1]->grads, self->grads);
     // tt_destroy_grads(grads_1);
     tt_free(self->parents[1]->grads);
     self->parents[1]->grads = grads_1;
@@ -957,8 +957,6 @@ void _conv2d_backwards(tt *self) {
   int cin = self->parents[0]->view->shape->items[1];
   int win = self->parents[0]->view->shape->items[3];
   int hin = self->parents[0]->view->shape->items[2];
-  int wout = self->view->shape->items[3];
-  int hout = self->view->shape->items[2];
   int kernel_size = self->parents[1]->view->shape->items[3];
 
   // input gradients

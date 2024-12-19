@@ -84,27 +84,23 @@ int main(void) {
   srand(time(NULL));
 
   ttuple* shape = ttuple_build(4, 1, 1, 4, 4);
-  tt* input = tt_linspace(shape, 1, 16, 4*4, true);
+  tt* input = tt_linspace(shape, 1, 16, 1*1*4*4, true);
 
-  ttuple* kernel_shape = ttuple_build(4, 1, 1, 3, 3);
-  tt* kernels = tt_linspace(kernel_shape, 1, 9, 3*3, true);
+  tt* other = tt_fill(shape, 3.5, true);
 
-  tt* conv = tt_conv2d(input, kernels);
+  int axis = 3;
   
-  tt* sum = tt_sum(conv, -1);
+  tt* lsm = log_softmax(input, 3);
 
-  tt_print(input, false, false);
-  tt_print(kernels, false, false);
-  tt_print(conv, false, false);
-  tt_print(sum, false, false);
-  
+  tt* sum = tt_sum(lsm, -1);
+
   tgraph* comp_graph = tgraph_build(sum);
   tgraph_zeroed(comp_graph);
   tgraph_backprop(comp_graph);
 
-  tt_print(input->grads, false, false);
-  tt_print(kernels->grads, false, false);
-  tt_print(conv->grads, false, false);
-  tt_print(sum->grads, false, false);
+
+  tt_print(sum, true, true);
+  tt_print(lsm, true, true);
+  tt_print(input, true, true);
 
 }
